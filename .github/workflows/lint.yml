@@ -47,7 +47,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
       - name: Ensure SHA pinned actions
-        uses: zgosalvez/github-actions-ensure-sha-pinned-actions@38608ef4fb69adae7f1eac6eeb88e67b7d083bfd # 3.0.16
+        uses: zgosalvez/github-actions-ensure-sha-pinned-actions@6ae615f6475d2ede5ad88bea6baa7a1d5e93ffaa # 3.0.19
         with:
           allowlist: |
             aws-actions/
