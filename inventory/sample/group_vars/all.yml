@@ -8,7 +8,7 @@ systemd_dir: /etc/systemd/system
 system_timezone: Your/Timezone
 
 # interface which will be used for flannel
-flannel_iface: eth0
+flannel_iface: "{{ ansible_facts.default_ipv4.interface | default( 'ens0' ) }}"
 
 # uncomment calico_iface to use tigera operator/calico cni instead of flannel https://docs.tigera.io/calico/latest/about
 # calico_iface: "eth0"
