@@ -33,7 +33,7 @@ server_init_args: >-
     {% else %}
       --server https://{{ hostvars[groups[group_name_master | default('master')][0]].k3s_node_ip | split(",") | first | ansible.utils.ipwrap }}:6443
     {% endif %}
-    --token {{ k3s_token }}
+    --token {{ k3s_token | replace('%', '%%') }}
   {% endif %}
   {{ extra_server_args }}
 
