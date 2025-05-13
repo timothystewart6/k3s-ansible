@@ -92,11 +92,11 @@ argument_specs:
 
       metal_lb_controller_tag_version:
         description: Image tag for MetalLB
-        default: v0.14.3
+        default: v0.14.9
 
       metal_lb_speaker_tag_version:
         description: Image tag for MetalLB
-        default: v0.14.3
+        default: v0.14.9
 
       metal_lb_type:
         choices:
