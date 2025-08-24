@@ -67,3 +67,15 @@
     path: /etc/sudoers
     validate: visudo -cf %s
   when: ansible_os_family in [ "RedHat", "Suse" ]
+
+- name: install libnfs-utils
+  apt:
+    name: libnfs-utils
+    state: present
+    update_cache: true
+
+- name: install nfs-common
+  apt:
+    name: nfs-common
+    state: present
+    update_cache: true
