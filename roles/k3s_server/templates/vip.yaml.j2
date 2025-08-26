@@ -62,8 +62,8 @@ spec:
           value: "{{ kube_vip_bgp_routerid }}"
 {% endif %}
 {% if _kube_vip_bgp_peers | length > 0 %}
-        - name: bgppeers
-          value: "{{ _kube_vip_bgp_peers | map(attribute='peer_address') | zip(_kube_vip_bgp_peers| map(attribute='peer_asn')) | map('join', ',') | join(':') }}"  # yamllint disable-line rule:line-length
+        - name: bgp_peers
+          value: "{{ _kube_vip_bgp_peers | map(attribute='peer_address') | zip(_kube_vip_bgp_peers| map(attribute='peer_asn')) | map('join', ':') | join(',') }}"  # yamllint disable-line rule:line-length
 {% else %}
 {% if kube_vip_bgp_as is defined %}
         - name: bgp_as
