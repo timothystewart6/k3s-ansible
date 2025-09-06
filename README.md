@@ -78,7 +78,7 @@ If needed, you can also edit `inventory/my-cluster/group_vars/all.yml` to match 
 Start provisioning of the cluster using the following command:
 
 ```bash
-ansible-playbook site.yml -i inventory/my-cluster/hosts.ini
+ansible-playbook playbooks/site.yml -i inventory/my-cluster/hosts.ini
 ```
 
 After deployment control plane will be accessible via virtual ip-address which is defined in inventory/group_vars/all.yml as `apiserver_endpoint`
@@ -86,7 +86,7 @@ After deployment control plane will be accessible via virtual ip-address which i
 ### 🔥 Remove k3s cluster
 
 ```bash
-ansible-playbook reset.yml -i inventory/my-cluster/hosts.ini
+ansible-playbook playbooks/reset.yml -i inventory/my-cluster/hosts.ini
 ```
 
 >You should also reboot these nodes due to the VIP not being destroyed
@@ -210,7 +210,7 @@ This collection can now be used in larger ansible projects.
 
 Instructions:
 
-- create or modify a file `collections/requirements.yml` in your project
+- Create or modify a file `collections/requirements.yml` in your project
 
 ```yml
 collections:
@@ -223,8 +223,8 @@ collections:
     version: master
 ```
 
-- install via `ansible-galaxy collection install -r ./collections/requirements.yml`
-- every role is now available via the prefix `techno_tim.k3s_ansible.` e.g. `techno_tim.k3s_ansible.lxc`
+- Install via `ansible-galaxy collection install -r ./collections/requirements.yml`
+- Every role and every playbook is then available via the prefix `techno_tim.k3s_ansible.` e.g. `techno_tim.k3s_ansible.lxc` or `techno_tim.k3s_ansible.reboot`
 
 ## Thanks 🤝
 

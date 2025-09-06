@@ -1,3 +1,3 @@
 #!/bin/bash
 
-ansible-playbook reset.yml
+ansible-playbook playbooks/reset.yml
