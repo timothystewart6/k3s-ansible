@@ -4,4 +4,4 @@
     {{ lookup("ansible.builtin.env", "MOLECULE_SCENARIO_DIRECTORY") }}/overrides.yml
 
 - name: Reset
-  ansible.builtin.import_playbook: ../../reset.yml
+  ansible.builtin.import_playbook: ../../playbooks/reset.yml

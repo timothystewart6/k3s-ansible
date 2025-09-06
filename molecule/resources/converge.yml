@@ -4,4 +4,4 @@
     {{ lookup("ansible.builtin.env", "MOLECULE_SCENARIO_DIRECTORY") }}/overrides.yml
 
 - name: Converge
-  ansible.builtin.import_playbook: ../../site.yml
+  ansible.builtin.import_playbook: ../../playbooks/site.yml

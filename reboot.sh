@@ -1,3 +1,3 @@
 #!/bin/bash
 
-ansible-playbook reboot.yml
+ansible-playbook playbooks/reboot.yml
