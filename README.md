@@ -91,6 +91,16 @@ ansible-playbook reset.yml -i inventory/my-cluster/hosts.ini
 
 >You should also reboot these nodes due to the VIP not being destroyed
 
+### ⏻️ Reboot Cluster Nodes
+
+The cluster nodes can all be rebooted at once, or staggered. For a staggered reboot, you can use `concurrent_reboots` to specify
+how many nodes can be rebooted simultaneously. You can also use `wait_seconds_after_reboot` to specify how many seconds wait
+time there should be between a successful reboot and starting the next reboot; this could be helpful for waiting to restart pods.
+
+```bash
+ansible-playbook reboot.yml -i inventory/my-cluster/hosts.ini --extra-vars 'concurrent_reboots=2 wait_seconds_after_reboot=30'
+```
+
 ## ⚙️ Kube Config
 
 To copy your `kube config` locally so that you can access your **Kubernetes** cluster run:
