@@ -114,7 +114,7 @@ python-dateutil==2.8.2
     # via kubernetes
 python-vagrant==1.0.0
     # via molecule-plugins
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via
     #   -r requirements.in
     #   ansible-compat
