@@ -44,7 +44,7 @@
   block:
     - name: Verify that all nodes actually joined (check k3s-init.service if this fails)
       ansible.builtin.command:
-        cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} get nodes -l 'node-role.kubernetes.io/master=true' -o=jsonpath='{.items[*].metadata.name}'" # yamllint disable-line rule:line-length
+        cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} get nodes -l 'node-role.kubernetes.io/control-plane=true' -o=jsonpath='{.items[*].metadata.name}'" # yamllint disable-line rule:line-length
       register: nodes
       until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups[group_name_master | default('master')] | length) # yamllint disable-line rule:line-length
       retries: "{{ retry_count | default(20) }}"
