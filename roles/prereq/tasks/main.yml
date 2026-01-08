@@ -33,6 +33,32 @@
     reload: true
   tags: sysctl
 
+- name: Check if br_netfilter module exists
+  ansible.builtin.shell: |
+    find /lib/modules/$(uname -r) -name "br_netfilter.ko*" | wc -l
+  register: br_netfilter_exists
+  changed_when: false
+  when: ansible_os_family == "RedHat"
+
+- name: Install kernel-modules-extra if br_netfilter missing
+  ansible.builtin.yum:
+    name: kernel-modules-extra
+    state: present
+    update_cache: yes
+  register: kernel_modules_installed
+  when:
+    - ansible_os_family == "RedHat"
+    - br_netfilter_exists.stdout | int == 0
+
+- name: Reboot after kernel-modules-extra installation
+  ansible.builtin.reboot:
+    reboot_command: "{{ custom_reboot_command | default(omit) }}"
+    reboot_timeout: 3600
+  when:
+    - ansible_os_family == "RedHat"
+    - kernel_modules_installed is defined
+    - kernel_modules_installed is changed
+
 - name: Add br_netfilter to /etc/modules-load.d/
   ansible.builtin.copy:
     content: br_netfilter

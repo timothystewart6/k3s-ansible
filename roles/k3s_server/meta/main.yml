@@ -90,6 +90,11 @@ argument_specs:
         description: IP range for kube-vip load balancer
         default: ~
 
+      metal_lb_install:
+        description: Install MetalLB
+        default: true
+        type: bool
+
       metal_lb_controller_tag_version:
         description: Image tag for MetalLB
         default: v0.14.3

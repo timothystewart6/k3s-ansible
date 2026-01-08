@@ -1,5 +1,5 @@
 ---
-k3s_version: v1.30.2+k3s2
+k3s_version: v1.33.4+k3s1
 # this is the user that has ssh access to these machines
 ansible_user: ansibleuser
 systemd_dir: /etc/systemd/system
@@ -13,13 +13,13 @@ flannel_iface: eth0
 # uncomment calico_iface to use tigera operator/calico cni instead of flannel https://docs.tigera.io/calico/latest/about
 # calico_iface: "eth0"
 calico_ebpf: false # use eBPF dataplane instead of iptables
-calico_tag: v3.28.0 # calico version tag
+calico_tag: v3.30.3 # calico version tag
 
 # uncomment cilium_iface to use cilium cni instead of flannel or calico
 # ensure v4.19.57, v5.1.16, v5.2.0 or more recent kernel
 # cilium_iface: "eth0"
 cilium_mode: native # native when nodes on same subnet or using bgp, else set routed
-cilium_tag: v1.16.0 # cilium version tag
+cilium_tag: v1.18.2 # cilium version tag
 cilium_hubble: true # enable hubble observability relay and ui
 
 # if using calico or cilium, you may specify the cluster pod cidr pool
@@ -84,7 +84,7 @@ extra_agent_args: >-
   {{ extra_args }}
 
 # image tag for kube-vip
-kube_vip_tag_version: v0.8.2
+kube_vip_tag_version: v1.0.0
 
 # tag for kube-vip-cloud-provider manifest
 # kube_vip_cloud_provider_tag_version: "main"
@@ -92,6 +92,8 @@ kube_vip_tag_version: v0.8.2
 # kube-vip ip range for load balancer
 # (uncomment to use kube-vip for services instead of MetalLB)
 # kube_vip_lb_ip_range: "192.168.30.80-192.168.30.90"
+
+metal_lb_install: true
 
 # metallb type frr or native
 metal_lb_type: native
@@ -105,8 +107,8 @@ metal_lb_mode: layer2
 # metal_lb_bgp_peer_address: "192.168.30.1"
 
 # image tag for metal lb
-metal_lb_speaker_tag_version: v0.14.8
-metal_lb_controller_tag_version: v0.14.8
+metal_lb_speaker_tag_version: v0.15.2
+metal_lb_controller_tag_version: v0.15.2
 
 # metallb ip range for load balancer
 metal_lb_ip_range: 192.168.30.80-192.168.30.90

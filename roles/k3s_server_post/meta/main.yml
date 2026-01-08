@@ -121,6 +121,11 @@ argument_specs:
         description: IP range for kube-vip load balancer
         default: ~
 
+      metal_lb_install:
+        description: Install MetalLB
+        default: true
+        type: bool
+
       metal_lb_available_timeout:
         description: Wait for MetalLB resources
         default: 240s
