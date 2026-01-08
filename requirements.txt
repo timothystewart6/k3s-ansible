@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements.in
 #
-ansible-compat==4.1.11
+ansible-compat==24.10.0
     # via molecule
 ansible-core==2.18.0
     # via
@@ -73,11 +73,11 @@ markupsafe==2.1.4
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-molecule==6.0.3
+molecule==25.1.0
     # via
     #   -r requirements.in
     #   molecule-plugins
-molecule-plugins[vagrant]==23.5.3
+molecule-plugins[vagrant]==23.7.0
     # via -r requirements.in
 netaddr==0.10.1
     # via -r requirements.in
