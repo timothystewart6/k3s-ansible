@@ -2,9 +2,27 @@
 - name: Reboot k3s_cluster
   hosts: k3s_cluster
   gather_facts: true
+
+  # concurrent_reboots defines how many hosts to reboot concurrently, if not defined, all hosts rebooted at once
+  serial: "{{ concurrent_reboots | default('100%') }}"
+
   tasks:
-    - name: Reboot the nodes (and Wait upto 5 mins max)
-      become: true
+    - name: >-
+        {{
+          'Reboot all nodes at once'
+          if (concurrent_reboots is not defined)
+          else 'Reboot nodes with concurrency of ' ~ concurrent_reboots
+        }}
       ansible.builtin.reboot:
         reboot_command: "{{ custom_reboot_command | default(omit) }}"
         reboot_timeout: 300
+        test_command: >-
+          {{ 'kubectl get nodes' if 'master' in group_names else 'whoami' }}
+
+    - name: Optional wait after reboot before next rebooting next node
+      ansible.builtin.pause:
+        seconds: "{{ wait_seconds_after_reboot | default(0) }}"
+      when: >-
+        concurrent_reboots is defined and
+        wait_seconds_after_reboot is defined and
+        wait_seconds_after_reboot | int > 0
