@@ -21,6 +21,7 @@ calico_tag: v3.28.0 # calico version tag
 cilium_mode: native # native when nodes on same subnet or using bgp, else set routed
 cilium_tag: v1.16.0 # cilium version tag
 cilium_hubble: true # enable hubble observability relay and ui
+cilium_envoy: true  # enable/disable envoy proxy 
 
 # if using calico or cilium, you may specify the cluster pod cidr pool
 cluster_cidr: 10.52.0.0/16
