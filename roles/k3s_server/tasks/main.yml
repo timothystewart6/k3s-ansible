@@ -27,7 +27,7 @@
 - name: Deploy metallb manifest
   ansible.builtin.include_tasks: metallb.yml
   tags: metallb
-  when: kube_vip_lb_ip_range is not defined and (not cilium_bgp or cilium_iface is not defined)
+  when: kube_vip_lb_ip_range is not defined and (cilium_bgp is not defined or cilium_iface is not defined)
 
 - name: Deploy kube-vip manifest
   ansible.builtin.include_tasks: kube-vip.yml

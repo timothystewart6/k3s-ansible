@@ -149,8 +149,8 @@ See the commands [here](https://technotim.com/posts/k3s-etcd-ansible/#testing-yo
 | `k3s_server` | `kube_vip_tag_version` | string | `v0.7.2` | Not required | Image tag for kube-vip |
 | `k3s_server` | `kube_vip_cloud_provider_tag_version` | string | `main` | Not required | Tag for kube-vip-cloud-provider manifest when enable |
 | `k3s_server`, `k3_server_post` | `kube_vip_lb_ip_range` | string | `~` | Not required | IP range for kube-vip load balancer |
-| `k3s_server`, `k3s_server_post` | `metal_lb_controller_tag_version` | string | `v0.14.3` | Not required | Image tag for MetalLB |
-| `k3s_server` | `metal_lb_speaker_tag_version` | string | `v0.14.3` | Not required | Image tag for MetalLB |
+| `k3s_server`, `k3s_server_post` | `metal_lb_controller_tag_version` | string | `v0.14.9` | Not required | Image tag for MetalLB |
+| `k3s_server` | `metal_lb_speaker_tag_version` | string | `v0.14.9` | Not required | Image tag for MetalLB |
 | `k3s_server` | `metal_lb_type` | string | `native` | Not required | Use FRR mode or native. Valid values are `frr` and `native` |
 | `k3s_server` | `retry_count` | int | `20` | Not required | Amount of retries when verifying that nodes joined |
 | `k3s_server` | `server_init_args` | string | ❌ | Not required | Arguments for server nodes |
@@ -178,7 +178,7 @@ See the commands [here](https://technotim.com/posts/k3s-etcd-ansible/#testing-yo
 | `k3s_server_post` | `kube_proxy_replacement` | bool | `true` | Not required | Replace the native kube-proxy with Cilium |
 | `k3s_server_post` | `metal_lb_available_timeout` | string | `240s` | Not required | Wait for MetalLB resources |
 | `k3s_server_post` | `metal_lb_ip_range` | string | `192.168.30.80-192.168.30.90` | Not required | MetalLB ip range for load balancer |
-| `k3s_server_post` | `metal_lb_controller_tag_version` | string | `v0.14.3` | Not required | Image tag for MetalLB |
+| `k3s_server_post` | `metal_lb_controller_tag_version` | string | `v0.14.9` | Not required | Image tag for MetalLB |
 | `k3s_server_post` | `metal_lb_mode` | string | `layer2` | Not required | Metallb mode (choices are `bgp` and `layer2`) |
 | `k3s_server_post` | `metal_lb_bgp_my_asn` | string | `~` | Not required | BGP ASN configurations |
 | `k3s_server_post` | `metal_lb_bgp_peer_asn` | string | `~` | Not required | BGP peer ASN configurations |

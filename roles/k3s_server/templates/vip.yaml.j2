@@ -36,7 +36,7 @@ spec:
         - name: vip_interface
           value: {{ kube_vip_iface }}
 {% endif %}
-        - name: vip_cidr
+        - name: vip_subnet
           value: "{{ apiserver_endpoint | ansible.utils.ipsubnet | ansible.utils.ipaddr('prefix') }}"
         - name: cp_enable
           value: "true"
@@ -79,7 +79,7 @@ spec:
 {% endif %}
 {% endif %}
 {% endif %}
-        image: ghcr.io/kube-vip/kube-vip:{{ kube_vip_tag_version }}
+        image: {{ kube_vip_image }}:{{ kube_vip_tag_version }}
         imagePullPolicy: Always
         name: kube-vip
         resources: {}

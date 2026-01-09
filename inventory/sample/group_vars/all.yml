@@ -105,8 +105,8 @@ metal_lb_mode: layer2
 # metal_lb_bgp_peer_address: "192.168.30.1"
 
 # image tag for metal lb
-metal_lb_speaker_tag_version: v0.14.8
-metal_lb_controller_tag_version: v0.14.8
+metal_lb_speaker_tag_version: v0.14.9
+metal_lb_controller_tag_version: v0.14.9
 
 # metallb ip range for load balancer
 metal_lb_ip_range: 192.168.30.80-192.168.30.90
