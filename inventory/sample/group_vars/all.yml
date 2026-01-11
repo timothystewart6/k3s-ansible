@@ -1,5 +1,5 @@
 ---
-k3s_version: v1.30.2+k3s2
+k3s_version: v1.34.2+k3s1
 # this is the user that has ssh access to these machines
 ansible_user: ansibleuser
 systemd_dir: /etc/systemd/system
@@ -13,13 +13,13 @@ flannel_iface: eth0
 # uncomment calico_iface to use tigera operator/calico cni instead of flannel https://docs.tigera.io/calico/latest/about
 # calico_iface: "eth0"
 calico_ebpf: false # use eBPF dataplane instead of iptables
-calico_tag: v3.28.0 # calico version tag
+calico_tag: v3.31.0 # calico version tag
 
 # uncomment cilium_iface to use cilium cni instead of flannel or calico
 # ensure v4.19.57, v5.1.16, v5.2.0 or more recent kernel
 # cilium_iface: "eth0"
 cilium_mode: native # native when nodes on same subnet or using bgp, else set routed
-cilium_tag: v1.16.0 # cilium version tag
+cilium_tag: v1.18.5 # cilium version tag
 cilium_hubble: true # enable hubble observability relay and ui
 
 # if using calico or cilium, you may specify the cluster pod cidr pool

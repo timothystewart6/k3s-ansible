@@ -1,7 +1,7 @@
 ---
 - name: Deploy Calico to cluster
-  when: ansible_hostname == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
   run_once: true
+  when: inventory_hostname == groups[group_name_master | default('master')][0]
   block:
     - name: Create manifests directory on first master
       ansible.builtin.file:
@@ -11,13 +11,22 @@
         group: root
         mode: "0755"
 
-    - name: "Download to first master: manifest for Tigera Operator and Calico CRDs"
+    # Calico v3.30+ split: CRDs are no longer bundled in tigera-operator.yaml.
+    - name: Download Tigera operator CRDs (v3.30+)
       ansible.builtin.get_url:
-        url: https://raw.githubusercontent.com/projectcalico/calico/{{ calico_tag }}/manifests/tigera-operator.yaml
+        url: "https://raw.githubusercontent.com/projectcalico/calico/{{ calico_tag }}/manifests/operator-crds.yaml"
+        dest: /tmp/k3s/operator-crds.yaml
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Download Tigera operator manifest
+      ansible.builtin.get_url:
+        url: "https://raw.githubusercontent.com/projectcalico/calico/{{ calico_tag }}/manifests/tigera-operator.yaml"
         dest: /tmp/k3s/tigera-operator.yaml
         owner: root
         group: root
-        mode: "0755"
+        mode: "0644"
 
     - name: Copy Calico custom resources manifest to first master
       ansible.builtin.template:
@@ -25,55 +34,60 @@
         dest: /tmp/k3s/custom-resources.yaml
         owner: root
         group: root
-        mode: "0755"
+        mode: "0644"
 
-    - name: Deploy or replace Tigera Operator
-      block:
-        - name: Deploy Tigera Operator
-          ansible.builtin.command:
-            cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} create -f /tmp/k3s/tigera-operator.yaml"
-          register: create_operator
-          changed_when: "'created' in create_operator.stdout"
-          failed_when: "'Error' in create_operator.stderr and 'already exists' not in create_operator.stderr"
-      rescue:
-        - name: Replace existing Tigera Operator
-          ansible.builtin.command:
-            cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} replace -f /tmp/k3s/tigera-operator.yaml"
-          register: replace_operator
-          changed_when: "'replaced' in replace_operator.stdout"
-          failed_when: "'Error' in replace_operator.stderr"
+    - name: Apply Tigera operator CRDs (server-side to avoid annotation size limit)
+      ansible.builtin.command:
+        cmd: >-
+          {{ k3s_kubectl_binary | default('k3s kubectl') }}
+          apply --server-side --force-conflicts
+          -f /tmp/k3s/operator-crds.yaml
+      register: apply_operator_crds
+      changed_when: "'configured' in apply_operator_crds.stdout or 'created' in apply_operator_crds.stdout"
+      failed_when: apply_operator_crds.rc != 0
 
-    - name: Wait for Tigera Operator resources
+    - name: Wait for Tigera operator CRDs to be established
       ansible.builtin.command: >-
-        {{ k3s_kubectl_binary | default('k3s kubectl') }} wait {{ item.type }}/{{ item.name }}
-        --namespace='tigera-operator'
+        {{ k3s_kubectl_binary | default('k3s kubectl') }} wait
+        --for=condition=Established
+        --timeout=180s
+        crd/{{ item }}
+      register: crd_wait
+      changed_when: false
+      until: crd_wait is succeeded
+      retries: 10
+      delay: 6
+      with_items:
+        # These cover the common objects referenced by calico custom-resources.yaml
+        - installations.operator.tigera.io
+        - apiservers.operator.tigera.io
+        - imagesets.operator.tigera.io
+
+    - name: Apply Tigera Operator
+      ansible.builtin.command:
+        cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} apply -f /tmp/k3s/tigera-operator.yaml"
+      register: apply_operator
+      changed_when: "'configured' in apply_operator.stdout or 'created' in apply_operator.stdout"
+      failed_when: apply_operator.rc != 0
+
+    - name: Wait for Tigera Operator deployment to be Available
+      ansible.builtin.command: >-
+        {{ k3s_kubectl_binary | default('k3s kubectl') }} wait deployment/tigera-operator
+        --namespace=tigera-operator
         --for=condition=Available=True
-        --timeout=30s
+        --timeout=300s
       register: tigera_result
       changed_when: false
       until: tigera_result is succeeded
-      retries: 7
-      delay: 7
-      with_items:
-        - { name: tigera-operator, type: deployment }
-      loop_control:
-        label: "{{ item.type }}/{{ item.name }}"
+      retries: 10
+      delay: 6
 
-    - name: Deploy Calico custom resources
-      block:
-        - name: Deploy custom resources for Calico
-          ansible.builtin.command:
-            cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} create -f /tmp/k3s/custom-resources.yaml"
-          register: create_cr
-          changed_when: "'created' in create_cr.stdout"
-          failed_when: "'Error' in create_cr.stderr and 'already exists' not in create_cr.stderr"
-      rescue:
-        - name: Apply new Calico custom resource manifest
-          ansible.builtin.command:
-            cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} apply -f /tmp/k3s/custom-resources.yaml"
-          register: apply_cr
-          changed_when: "'configured' in apply_cr.stdout or 'created' in apply_cr.stdout"
-          failed_when: "'Error' in apply_cr.stderr"
+    - name: Apply Calico custom resources
+      ansible.builtin.command:
+        cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} apply -f /tmp/k3s/custom-resources.yaml"
+      register: apply_cr
+      changed_when: "'configured' in apply_cr.stdout or 'created' in apply_cr.stdout"
+      failed_when: apply_cr.rc != 0
 
     - name: Wait for Calico system resources to be available
       ansible.builtin.command: >-
@@ -87,34 +101,28 @@
         --namespace='{{ item.namespace }}'
         --for=condition=Available
         {% endif %}
-        --timeout=30s
-      register: cr_result
+        --timeout=180s
+      register: calico_wait
       changed_when: false
-      until: cr_result is succeeded
-      retries: 30
+      until: calico_wait is succeeded
+      retries: 60
       delay: 7
       with_items:
         - { name: calico-typha, type: deployment, namespace: calico-system }
         - { name: calico-kube-controllers, type: deployment, namespace: calico-system }
-        - name: csi-node-driver
-          type: daemonset
-          selector: k8s-app=csi-node-driver
-          namespace: calico-system
-        - name: calico-node
-          type: daemonset
-          selector: k8s-app=calico-node
-          namespace: calico-system
-        - { name: calico-apiserver, type: deployment, namespace: calico-apiserver }
+        - { name: csi-node-driver, type: daemonset, selector: "k8s-app=csi-node-driver", namespace: calico-system }
+        - { name: calico-node, type: daemonset, selector: "k8s-app=calico-node", namespace: calico-system }
+       # - { name: calico-apiserver, type: deployment, namespace: calico-apiserver }
       loop_control:
         label: "{{ item.type }}/{{ item.name }}"
 
     - name: Patch Felix configuration for eBPF mode
       ansible.builtin.command:
-        cmd: >
+        cmd: >-
           {{ k3s_kubectl_binary | default('k3s kubectl') }} patch felixconfiguration default
           --type='merge'
           --patch='{"spec": {"bpfKubeProxyIptablesCleanupEnabled": false}}'
       register: patch_result
-      changed_when: "'felixconfiguration.projectcalico.org/default patched' in patch_result.stdout"
-      failed_when: "'Error' in patch_result.stderr"
-      when: calico_ebpf
+      changed_when: "'patched' in patch_result.stdout"
+      failed_when: patch_result.rc != 0
+      when: calico_ebpf | default(false) | bool

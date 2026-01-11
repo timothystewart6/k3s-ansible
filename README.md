@@ -1,3 +1,11 @@
+# About this fork
+
+See [this issue](https://github.com/timothystewart6/k3s-ansible/issues/667) for where this comes from. This updates a few versions:
+- k3s to v1.34.2+k3s1
+- Calico to v3.31.0
+- Cilium to v1.18.5
+- All playbooks have been modified to reflect this and are working.
+
 # Automated build of HA k3s Cluster with `kube-vip` and MetalLB
 
 ![Fully Automated K3S etcd High Availability Install](https://img.youtube.com/vi/CbkEWcUZ7zM/0.jpg)
@@ -16,8 +24,8 @@ If you want more context on how this works, see:
 
 Build a Kubernetes cluster using Ansible with k3s. The goal is easily install a HA Kubernetes cluster on machines running:
 
-- [x] Debian (tested on version 11)
-- [x] Ubuntu (tested on version 22.04)
+- [x] Debian (tested on version 11 & 12)
+- [x] Ubuntu (tested on version 22.04 & 24.04)
 - [x] Rocky (tested on version 9)
 
 on processor architecture:
