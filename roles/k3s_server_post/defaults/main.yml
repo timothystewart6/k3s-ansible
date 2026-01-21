@@ -30,3 +30,4 @@ metal_lb_mode: layer2
 metal_lb_available_timeout: 240s
 metal_lb_controller_tag_version: v0.14.3
 metal_lb_ip_range: 192.168.30.80-192.168.30.90
+metal_lb_interfaces:
