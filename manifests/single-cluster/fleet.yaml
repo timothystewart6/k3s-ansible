@@ -1,0 +1,6 @@
+# This file and all contents in it are OPTIONAL.
+
+# The default namespace to apply to resources that are namespaced
+# but do not specify a namespace.  In this example no resources
+# are configured with a namespace so this default will apply
+namespace: fleet-manifest-example
