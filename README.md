@@ -11,6 +11,9 @@ See the [readme](https://github.com/timothystewart6/k3s-ansible/blob/master/READ
 # Branches
 There is another branch with an added feature of deploying Longhorn in your cluster as part of the playbook, which can be convenient. You can check it out [here](https://github.com/panoptikoe/k3s-ansible/tree/longhorn).
 
+# Example deployments
+If you're looking for some examples of stuff to run on K3S in a homelab setting, you can check out my [other repo](https://github.com/panoptikoe/homelabexamples).
+
 ## Thanks 🤝
 
 This repo is really standing on the shoulders of giants. Thank you to all those who have contributed and thanks to these repos for code and ideas:
