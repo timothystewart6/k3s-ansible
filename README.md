@@ -9,7 +9,7 @@ See [this issue](https://github.com/timothystewart6/k3s-ansible/issues/667) for 
 See the [readme](https://github.com/timothystewart6/k3s-ansible/blob/master/README.md) in the original repo for more information.
 
 # Branches
-There is another branch with an added feature of deploying Longhorn in your cluster as part of the playbook, which can be convenient. You can check it out [here](https://github.com/panoptikoe/k3s-ansible/tree/longhorn)
+There is another branch with an added feature of deploying Longhorn in your cluster as part of the playbook, which can be convenient. You can check it out [here](https://github.com/panoptikoe/k3s-ansible/tree/longhorn).
 
 ## Thanks 🤝
 
