@@ -1,10 +1,11 @@
 # About this fork
 
 See [this issue](https://github.com/timothystewart6/k3s-ansible/issues/667) for where this comes from. This updates a few versions:
-- k3s to v1.34.2+k3s1
+- k3s to v1.34.2+k3s1 (also tested with v1.35.0+k3s1)
 - Calico to v3.31.0
-- Cilium to v1.18.5
+- Cilium to v1.18.5 (also tested with 1.19.0)
 - All playbooks have been modified to reflect this and are working.
+- Small disclaimer: the original playbook was tested for Debian, Ubuntu and Rocky. I only tested all of this on Ubuntu 24.04. Your mileage may vary with Debian or Rocky!
 
 See the [readme](https://github.com/timothystewart6/k3s-ansible/blob/master/README.md) in the original repo for more information.
 
