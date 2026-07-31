@@ -1,4 +1,6 @@
 .env/
 *.log
 ansible.cfg
+.ansible/
 kubeconfig
+zIgnore/

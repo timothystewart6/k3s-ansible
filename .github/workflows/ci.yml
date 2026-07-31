@@ -5,6 +5,8 @@ on:
     types:
       - opened
       - synchronize
+      - reopened
+      - ready_for_review
     paths-ignore:
       - '**/.gitignore'
       - '**/FUNDING.yml'
@@ -16,12 +18,21 @@ on:
       - '**/LICENSE'
       - '**/reboot.sh'
       - '**/reset.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   pre:
     uses: ./.github/workflows/cache.yml
+    needs: [lint]
   lint:
     uses: ./.github/workflows/lint.yml
-    needs: [pre]
   test:
     uses: ./.github/workflows/test.yml
     needs: [pre, lint]

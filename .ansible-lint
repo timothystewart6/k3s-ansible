@@ -3,6 +3,7 @@ profile: production
 exclude_paths:
   # default paths
   - .cache/
+  - .ansible/
   - .github/
   - test/fixtures/formatting-before/
   - test/fixtures/formatting-prettier/

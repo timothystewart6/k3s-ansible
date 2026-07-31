@@ -1,0 +1,6 @@
+---
+self-hosted-runner:
+  labels:
+    - k3s-ci
+    - virtualbox
+    - nested-virt

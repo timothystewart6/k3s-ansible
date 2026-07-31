@@ -5,7 +5,7 @@ on:
 jobs:
   molecule:
     name: Molecule
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, k3s-ci, virtualbox, nested-virt]
     strategy:
       matrix:
         scenario:
@@ -16,47 +16,36 @@ jobs:
           - cilium
           - kube-vip
       fail-fast: false
+      max-parallel: 1
     env:
       PYTHON_VERSION: "3.11"
+      VAGRANT_DEFAULT_PROVIDER: virtualbox
+      VAGRANT_HOME: ${{ github.workspace }}/.vagrant-home
 
     steps:
       - name: Check out the codebase
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      # these steps are necessary if not using ephemeral nodes
-      - name: Delete old Vagrant box versions
-        if: always() # do this even if a step before has failed
-        run: vagrant box prune --force
+      - name: Clean repository-owned resources before testing
+        run: ./.github/scripts/cleanup-runner-resources.sh --apply
 
-      - name: Remove all local Vagrant boxes
-        if: always() # do this even if a step before has failed
-        run: if vagrant box list 2>/dev/null; then vagrant box list | cut -f 1 -d ' ' | xargs -L 1 vagrant box remove -f 2>/dev/null && echo "All Vagrant boxes removed." || echo "No Vagrant boxes found."; else echo "No Vagrant boxes found."; fi
+      - name: Record host-only network baseline
+        run: ./.github/scripts/cleanup-runner-resources.sh --snapshot
 
-      - name: Remove all Virtualbox VMs
-        if: always() # do this even if a step before has failed
-        run: VBoxManage list vms | awk -F'"' '{print $2}' | xargs -I {} VBoxManage unregistervm --delete "{}"
-
-      - name: Remove all Virtualbox HDs
-        if: always() # do this even if a step before has failed
-        run: VBoxManage list hdds | awk -F':' '/^UUID:/ {print $2}' | xargs -I {} VBoxManage closemedium disk "{}" --delete
-
-      - name: Remove all Virtualbox Networks
-        if: always() # do this even if a step before has failed
-        run: VBoxManage list hostonlyifs | grep '^Name:' | awk '{print $2}' | grep '^vboxnet' | xargs -I {} VBoxManage hostonlyif remove {}
-
-      - name: Remove Virtualbox network config
-        if: always() # do this even if a step before has failed
-        run: sudo rm /etc/vbox/networks.conf || true
-
-      - name: Configure VirtualBox
-        run: |-
-          sudo mkdir -p /etc/vbox
-          cat <<EOF | sudo tee -a /etc/vbox/networks.conf > /dev/null
-          * 192.168.30.0/24
-          * fdad:bad:ba55::/64
-          EOF
+      - name: Check nested VirtualBox platform
+        run: |
+          set -Eeuo pipefail
+          grep -Eq 'vmx|svm' /proc/cpuinfo
+          test -c /dev/kvm
+          test -c /dev/vboxdrv
+          VBoxManage --version
+          vagrant --version
+          test -r /etc/vbox/networks.conf
+          test "$(stat -c '%u' /etc/vbox/networks.conf)" -eq 0
+          free -h
+          df -Pk "${RUNNER_TEMP}"
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # 5.3.0
@@ -67,8 +56,8 @@ jobs:
       - name: Restore vagrant Boxes cache
         uses: actions/cache/restore@6849a6489940f00c2f30c0fb92c6274307ccb58a # 4.1.2
         with:
-          path: ~/.vagrant.d/boxes
-          key: vagrant-boxes-${{ hashFiles('**/molecule.yml') }}
+          path: .vagrant-home/boxes
+          key: vagrant-boxes-${{ runner.os }}-${{ runner.arch }}-virtualbox-7.2-vagrant-2.4-${{ hashFiles('**/molecule.yml') }} # yamllint disable-line rule:line-length
           fail-on-cache-miss: true
 
       - name: Install dependencies
@@ -91,36 +80,20 @@ jobs:
           PY_COLORS: 1
           ANSIBLE_FORCE_COLOR: 1
 
-      # these steps are necessary if not using ephemeral nodes
-      - name: Delete old Vagrant box versions
-        if: always() # do this even if a step before has failed
-        run: vagrant box prune --force
+      - name: Collect runner diagnostics
+        if: always()
+        run: ./.github/scripts/collect-runner-diagnostics.sh "${RUNNER_TEMP}/logs/runner"
 
-      - name: Remove all local Vagrant boxes
-        if: always() # do this even if a step before has failed
-        run: if vagrant box list 2>/dev/null; then vagrant box list | cut -f 1 -d ' ' | xargs -L 1 vagrant box remove -f 2>/dev/null && echo "All Vagrant boxes removed." || echo "No Vagrant boxes found."; else echo "No Vagrant boxes found."; fi
-
-      - name: Remove all Virtualbox VMs
-        if: always() # do this even if a step before has failed
-        run: VBoxManage list vms | awk -F'"' '{print $2}' | xargs -I {} VBoxManage unregistervm --delete "{}"
-
-      - name: Remove all Virtualbox HDs
-        if: always() # do this even if a step before has failed
-        run: VBoxManage list hdds | awk -F':' '/^UUID:/ {print $2}' | xargs -I {} VBoxManage closemedium disk "{}" --delete
-
-      - name: Remove all Virtualbox Networks
-        if: always() # do this even if a step before has failed
-        run: VBoxManage list hostonlyifs | grep '^Name:' | awk '{print $2}' | grep '^vboxnet' | xargs -I {} VBoxManage hostonlyif remove {}
-
-      - name: Remove Virtualbox network config
-        if: always() # do this even if a step before has failed
-        run: sudo rm /etc/vbox/networks.conf || true
+      - name: Clean repository-owned resources after testing
+        if: always()
+        run: ./.github/scripts/cleanup-runner-resources.sh --apply
 
       - name: Upload log files
         if: always() # do this even if a step before has failed
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # 4.4.3
         with:
-          name: logs
+          name: logs-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/logs
-          overwrite: true
+          if-no-files-found: warn
+          retention-days: 14

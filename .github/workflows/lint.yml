@@ -5,15 +5,15 @@ on:
 jobs:
   pre-commit-ci:
     name: Pre-Commit
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
-      PYTHON_VERSION: "3.11"
+      PYTHON_VERSION: "3.12"
 
     steps:
       - name: Check out the codebase
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # 5.3.0
@@ -42,7 +42,7 @@ jobs:
 
   ensure-pinned-actions:
     name: Ensure SHA Pinned Actions
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
