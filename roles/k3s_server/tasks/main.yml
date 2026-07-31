@@ -51,13 +51,13 @@
   run_once: true
   when: groups[group_name_master | default('master')] | length > 1
 
-- name: Join additional masters inside the transient k3s-init service
-  ansible.builtin.command:
-    cmd: systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server {{ server_init_args }}
-    creates: "{{ systemd_dir }}/k3s-init.service"
-  when:
-    - groups[group_name_master | default('master')] | length > 1
-    - ansible_hostname != hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
+- name: Join additional masters one at a time
+  ansible.builtin.include_tasks: join_master.yml
+  loop: "{{ groups[group_name_master | default('master')][1:] }}"
+  loop_control:
+    loop_var: joining_master
+  run_once: true
+  when: groups[group_name_master | default('master')] | length > 1
 
 - name: Verification
   when: not ansible_check_mode

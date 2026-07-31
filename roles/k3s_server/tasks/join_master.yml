@@ -1,0 +1,27 @@
+---
+- name: Verify primary Kubernetes API is reachable from {{ joining_master }}
+  ansible.builtin.wait_for:
+    host: "{{ hostvars[groups[group_name_master | default('master')][0]].k3s_node_ip | split(',') | first }}"
+    port: 6443
+    connect_timeout: 5
+    timeout: "{{ retry_count | default(20) * 2 }}"
+  delegate_to: "{{ joining_master }}"
+
+- name: Join transient k3s-init service for {{ joining_master }}
+  ansible.builtin.command:
+    cmd: >-
+      systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init
+      k3s server {{ hostvars[joining_master].server_init_args }}
+    creates: "{{ systemd_dir }}/k3s-init.service"
+  delegate_to: "{{ joining_master }}"
+
+- name: Wait for primary registration of {{ joining_master }}
+  ansible.builtin.command:
+    cmd: >-
+      {{ k3s_kubectl_binary | default('k3s kubectl') }} get node {{ joining_master }}
+  delegate_to: "{{ groups[group_name_master | default('master')][0] }}"
+  register: joined_master
+  until: joined_master.rc == 0
+  retries: "{{ retry_count | default(20) }}"
+  delay: 2
+  changed_when: false

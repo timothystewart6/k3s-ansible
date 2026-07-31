@@ -9,6 +9,7 @@
       --unit=k3s-init.service --since=-30min --lines=5000
   changed_when: false
   failed_when: false
+  no_log: true
   register: k3s_init_log
 
 - name: Fetch k3s-init.service status
@@ -38,7 +39,9 @@
     dest: "{{ log_destination }}/k3s-init@{{ ansible_hostname }}.log"
     mode: "0644"
   vars:
-    content: >-
-      {{ ('=== k3s-init.service status ===\n' + k3s_init_status.stdout
-      + '\n\n=== k3s-init.service journal ===\n' + k3s_init_log.stdout)
-      | regex_replace('--token(?:=|\\s+)[^\\s]+', '--token ***') }}
+    content: |
+      === k3s-init.service status ===
+      {{ k3s_init_status.stdout | regex_replace('--token(?:=| +)[^ ]+', '--token ***') }}
+
+      === k3s-init.service journal ===
+      {{ k3s_init_log.stdout | regex_replace('--token(?:=| +)[^ ]+', '--token ***') }}
