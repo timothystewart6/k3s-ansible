@@ -4,8 +4,11 @@
 
 - name: Fetch k3s-init.service logs
   ansible.builtin.command:
-    cmd: journalctl --all --unit=k3s-init.service
+    cmd: >-
+      timeout --signal=TERM 30s journalctl --no-pager
+      --unit=k3s-init.service --since=-30min --lines=5000
   changed_when: false
+  failed_when: false
   register: k3s_init_log
 
 - name: Create {{ log_destination }}

@@ -11,10 +11,10 @@ trap 'rm -rf -- "$test_root"' EXIT
 molecule_root="$test_root/molecule"
 virtualbox_root="$test_root/VirtualBox VMs"
 fake_bin="$test_root/bin"
-mkdir -p -- "$molecule_root/repo/single_node/.vagrant/machines/control1/virtualbox" \
+mkdir -p -- "$molecule_root/k3s-ansible/single_node/.vagrant/machines/control1/virtualbox" \
   "$virtualbox_root/control1" "$virtualbox_root/unmarked" "$fake_bin"
 printf '%s\n' '11111111-1111-1111-1111-111111111111' \
-  > "$molecule_root/repo/single_node/.vagrant/machines/control1/virtualbox/id"
+  > "$molecule_root/k3s-ansible/single_node/.vagrant/machines/control1/virtualbox/id"
 touch "$virtualbox_root/control1/control1.vbox" "$virtualbox_root/control1/disk.vdi" \
   "$virtualbox_root/unmarked/unmarked.vbox"
 
@@ -52,6 +52,7 @@ output="$test_root/output.txt"
 if PATH="$fake_bin:$PATH" \
   HOME="$test_root/home" \
   K3S_CI_MOLECULE_ROOT="$molecule_root" \
+  K3S_CI_MOLECULE_PROJECT=k3s-ansible \
   K3S_CI_VIRTUALBOX_ROOT="$virtualbox_root" \
   K3S_CI_HOSTONLY_MARKER="$test_root/hostonly-baseline" \
   FAKE_VM_MODE=fault \
@@ -62,12 +63,13 @@ if PATH="$fake_bin:$PATH" \
   exit 1
 fi
 grep -Fq 'cleanup refused: unable to inspect VirtualBox VM' "$output"
-[[ -f "$molecule_root/repo/single_node/.vagrant/machines/control1/virtualbox/id" ]]
+[[ -f "$molecule_root/k3s-ansible/single_node/.vagrant/machines/control1/virtualbox/id" ]]
 
 printf '%s\n' 'vboxnet0|192.168.30.1' > "$test_root/hostonly-baseline"
 if PATH="$fake_bin:$PATH" \
   HOME="$test_root/home" \
   K3S_CI_MOLECULE_ROOT="$molecule_root" \
+  K3S_CI_MOLECULE_PROJECT=k3s-ansible \
   K3S_CI_VIRTUALBOX_ROOT="$virtualbox_root" \
   K3S_CI_HOSTONLY_MARKER="$test_root/hostonly-baseline" \
   FAKE_HOSTONLY_FAIL=true \
@@ -82,6 +84,7 @@ grep -Fq 'cleanup refused: unable to inventory VirtualBox host-only interfaces' 
 PATH="$fake_bin:$PATH" \
   HOME="$test_root/home" \
   K3S_CI_MOLECULE_ROOT="$molecule_root" \
+  K3S_CI_MOLECULE_PROJECT=k3s-ansible \
   K3S_CI_VIRTUALBOX_ROOT="$virtualbox_root" \
   K3S_CI_HOSTONLY_MARKER="$test_root/hostonly-baseline" \
   FAKE_VBOX_ROOT="$virtualbox_root" \
@@ -94,6 +97,7 @@ grep -Fq 'Would remove VM control1 (11111111-1111-1111-1111-111111111111)' "$out
 PATH="$fake_bin:$PATH" \
   HOME="$test_root/home" \
   K3S_CI_MOLECULE_ROOT="$molecule_root" \
+  K3S_CI_MOLECULE_PROJECT=k3s-ansible \
   K3S_CI_VIRTUALBOX_ROOT="$virtualbox_root" \
   K3S_CI_HOSTONLY_MARKER="$test_root/hostonly-baseline" \
   FAKE_VBOX_ROOT="$virtualbox_root" \
@@ -108,6 +112,7 @@ grep -Fq 'unregistervm unregistervm 11111111-1111-1111-1111-111111111111 --delet
 PATH="$fake_bin:$PATH" \
   HOME="$test_root/home" \
   K3S_CI_MOLECULE_ROOT="$molecule_root" \
+  K3S_CI_MOLECULE_PROJECT=k3s-ansible \
   K3S_CI_VIRTUALBOX_ROOT="$virtualbox_root" \
   K3S_CI_HOSTONLY_MARKER="$test_root/hostonly-baseline" \
   FAKE_VM_MODE=missing \
@@ -116,6 +121,6 @@ PATH="$fake_bin:$PATH" \
   bash "$repo_root/.github/scripts/cleanup-runner-resources.sh" --apply > "$output"
 
 grep -Fq 'Stale Vagrant state without a registered VM' "$output"
-[[ ! -d "$molecule_root/repo/single_node/.vagrant" ]]
+[[ ! -d "$molecule_root/k3s-ansible/single_node/.vagrant" ]]
 
 printf 'cleanup-runner-resources fixture test passed\n'

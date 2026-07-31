@@ -22,6 +22,7 @@ esac
 
 home_dir="${HOME:?HOME must be set}"
 molecule_root="${K3S_CI_MOLECULE_ROOT:-${home_dir}/.cache/molecule}"
+repository_name="${K3S_CI_MOLECULE_PROJECT:-k3s-ansible}"
 virtualbox_root="${K3S_CI_VIRTUALBOX_ROOT:-${home_dir}/VirtualBox VMs}"
 hostonly_marker="${K3S_CI_HOSTONLY_MARKER:-${home_dir}/.cache/k3s-ci/hostonly-interfaces}"
 
@@ -106,6 +107,10 @@ fail_closed() {
   exit 3
 }
 
+if [[ ! "$repository_name" =~ ^[A-Za-z0-9._-]+$ ]]; then
+  fail_closed 'invalid Molecule repository name'
+fi
+
 print_inventory() {
   local phase="$1"
   printf '%s VirtualBox inventory:\n' "$phase"
@@ -123,14 +128,25 @@ fi
 
 print_inventory before
 
+repository_root_real="$(resolve_existing_dir "$molecule_root_real/$repository_name" || true)"
+if [[ -z "$repository_root_real" ]]; then
+  printf 'No repository Molecule state root exists: %s\n' "$molecule_root_real/$repository_name"
+  cleanup_hostonly
+  print_inventory after
+  exit 0
+fi
+if ! root_contains "$molecule_root_real" "$repository_root_real"; then
+  fail_closed "repository Molecule state root is outside Molecule root: $repository_root_real"
+fi
+
 declare -a state_files=()
 while IFS= read -r -d '' state_file; do
   state_files+=("$state_file")
-done < <(find "$molecule_root_real/repo" -mindepth 6 -maxdepth 6 -type f \
+done < <(find "$repository_root_real" -mindepth 6 -maxdepth 6 -type f \
   -path '*/.vagrant/machines/*/virtualbox/id' -print0 2>/dev/null)
 
 if ((${#state_files[@]} == 0)); then
-  printf 'No repository-owned Molecule Vagrant state found under %s\n' "$molecule_root_real"
+  printf 'No repository-owned Molecule Vagrant state found under %s\n' "$repository_root_real"
   cleanup_hostonly
   print_inventory after
   exit 0
@@ -146,7 +162,7 @@ for state_file in "${state_files[@]}"; do
   machine_name="${machine_dir##*/}"
   scenario_name="${state_dir##*/}"
 
-  if ! root_contains "$molecule_root_real/repo" "$state_dir"; then
+  if ! root_contains "$repository_root_real" "$state_dir"; then
     fail_closed "state path is outside the repository Molecule root: $state_file_real"
   fi
   if ! is_supported_scenario "$scenario_name"; then

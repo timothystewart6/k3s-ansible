@@ -9,12 +9,12 @@ jobs:
     strategy:
       matrix:
         scenario:
-          - default
-          # - ipv6
           - single_node
           - calico
           - cilium
           - kube-vip
+          - default
+          # - ipv6
       fail-fast: false
       max-parallel: 1
     env:

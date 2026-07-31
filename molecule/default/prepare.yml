@@ -20,3 +20,26 @@
         enabled: false
         state: stopped
       become: true
+
+    - name: Verify GitHub release host DNS
+      ansible.builtin.getent:
+        database: hosts
+        key: github.com
+      register: github_dns
+      retries: 6
+      delay: 5
+      until: github_dns is succeeded
+
+    - name: Verify k3s checksum URL is reachable
+      ansible.builtin.uri:
+        url: >-
+          https://github.com/k3s-io/k3s/releases/download/{{ k3s_version
+          }}/sha256sum-amd64.txt
+        method: HEAD
+        follow_redirects: safe
+        status_code: [200, 302]
+        timeout: 15
+      register: k3s_checksum_request
+      retries: 3
+      delay: 5
+      until: k3s_checksum_request.status in [200, 302]
