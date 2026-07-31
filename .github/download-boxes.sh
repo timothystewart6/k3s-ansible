@@ -9,14 +9,12 @@ set -euo pipefail
 GIT_ROOT=$(git rev-parse --show-toplevel)
 PROVIDER=virtualbox
 
-yq --version
-
 # Define the path to the molecule.yml files
-MOLECULE_YML_PATH="${GIT_ROOT}/molecule/*/molecule.yml"
+MOLECULE_YML_PATH=("${GIT_ROOT}"/molecule/*/molecule.yml)
 
 # Extract and sort unique boxes from all molecule.yml files
-all_boxes=$(for file in $MOLECULE_YML_PATH; do
-    yq eval '.platforms[].box' "$file"
+all_boxes=$(for file in "${MOLECULE_YML_PATH[@]}"; do
+    yq -r '.platforms[].box' "$file"
 done | sort -u)
 
 echo all_boxes: "$all_boxes"
