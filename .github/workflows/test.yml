@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Check out the codebase
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # 7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
@@ -48,13 +48,13 @@ jobs:
           df -Pk "${RUNNER_TEMP}"
 
       - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # 5.3.0
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # 7.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip' # caching pip dependencies
 
       - name: Restore vagrant Boxes cache
-        uses: actions/cache/restore@6849a6489940f00c2f30c0fb92c6274307ccb58a # 4.1.2
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # 6.1.0
         with:
           path: .vagrant-home/boxes
           key: vagrant-boxes-${{ runner.os }}-${{ runner.arch }}-virtualbox-7.2-vagrant-2.4-${{ hashFiles('**/molecule.yml') }} # yamllint disable-line rule:line-length
@@ -90,7 +90,7 @@ jobs:
 
       - name: Upload log files
         if: always() # do this even if a step before has failed
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # 4.4.3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # 7.0.1
         with:
           name: logs-${{ matrix.scenario }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
