@@ -38,6 +38,7 @@
   ansible.builtin.command:
     cmd: systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server {{ server_init_args }}
     creates: "{{ systemd_dir }}/k3s-init.service"
+  no_log: true
   when: ansible_hostname == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
 
 - name: Wait for the first master Kubernetes API before joining other masters

@@ -11,9 +11,19 @@
   ansible.builtin.command:
     cmd: >-
       systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init
-      k3s server {{ hostvars[joining_master].server_init_args }}
+      k3s server {{ joining_server_args }}
     creates: "{{ systemd_dir }}/k3s-init.service"
   delegate_to: "{{ joining_master }}"
+  no_log: true
+  vars:
+    primary_master: "{{ groups[group_name_master | default('master')][0] }}"
+    primary_master_api: >-
+      {{ hostvars[primary_master].k3s_node_ip | split(',') | first | ansible.utils.ipwrap }}
+    joining_server_args: >-
+      {{ hostvars[joining_master].server_init_args | default('--server https://' +
+      primary_master_api + ':6443 --token ' +
+      (hostvars[joining_master].k3s_token | default(k3s_token)) + ' ' +
+      (hostvars[joining_master].extra_server_args | default(''))) }}
 
 - name: Wait for primary registration of {{ joining_master }}
   ansible.builtin.command:
