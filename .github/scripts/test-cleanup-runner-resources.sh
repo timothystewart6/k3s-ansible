@@ -12,9 +12,12 @@ molecule_root="$test_root/molecule"
 virtualbox_root="$test_root/VirtualBox VMs"
 fake_bin="$test_root/bin"
 mkdir -p -- "$molecule_root/k3s-ansible/single_node/.vagrant/machines/control1/virtualbox" \
+  "$molecule_root/k3s-ansible/single_node/.vagrant/machines/control2/virtualbox" \
   "$virtualbox_root/control1" "$virtualbox_root/unmarked" "$fake_bin"
 printf '%s\n' '11111111-1111-1111-1111-111111111111' \
   > "$molecule_root/k3s-ansible/single_node/.vagrant/machines/control1/virtualbox/id"
+printf '%s\n' '22222222-2222-2222-2222-222222222222' \
+  > "$molecule_root/k3s-ansible/single_node/.vagrant/machines/control2/virtualbox/id"
 touch "$virtualbox_root/control1/control1.vbox" "$virtualbox_root/control1/disk.vdi" \
   "$virtualbox_root/unmarked/unmarked.vbox"
 

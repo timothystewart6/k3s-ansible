@@ -156,6 +156,10 @@ virtualbox_root_real="$(resolve_existing_dir "$virtualbox_root" || true)"
 
 declare -a vm_records=()
 for state_file in "${state_files[@]}"; do
+  if [[ ! -f "$state_file" ]]; then
+    printf 'Skipping Vagrant state removed with its stale scenario directory: %s\n' "$state_file"
+    continue
+  fi
   state_file_real="$(readlink -f -- "$state_file")"
   state_dir="${state_file_real%/.vagrant/machines/*/virtualbox/id}"
   machine_dir="${state_file_real%/virtualbox/id}"
