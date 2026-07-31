@@ -22,6 +22,7 @@ jobs:
           cache: 'pip' # caching pip dependencies
 
       - name: Restore Ansible cache
+        id: cache-ansible
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # 6.1.0
         with:
           path: ~/.ansible/collections
@@ -36,6 +37,26 @@ jobs:
           echo "::group::Install Python requirements from requirements.txt"
           python3 -m pip install -r requirements.txt
           echo "::endgroup::"
+
+      - name: Install Ansible collections with retries
+        if: steps.cache-ansible.outputs.cache-hit != 'true'
+        run: |
+          set -Eeuo pipefail
+          for attempt in 1 2 3 4 5; do
+            if ansible-galaxy collection install -r collections/requirements.yml; then
+              exit 0
+            fi
+            echo "Ansible Galaxy attempt ${attempt} failed; retrying."
+            sleep $((attempt * 10))
+          done
+          exit 1
+
+      - name: Save Ansible collection cache
+        if: steps.cache-ansible.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # 6.1.0
+        with:
+          path: ~/.ansible/collections
+          key: ansible-${{ hashFiles('collections/requirements.yml') }}
 
       - name: Run pre-commit
         uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # 3.0.1
