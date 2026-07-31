@@ -5,11 +5,21 @@
 - name: Fetch k3s-init.service logs
   ansible.builtin.command:
     cmd: >-
-      timeout --signal=TERM 30s journalctl --no-pager
+      timeout --signal=TERM --kill-after=5s 30s journalctl --no-pager
       --unit=k3s-init.service --since=-30min --lines=5000
   changed_when: false
   failed_when: false
   register: k3s_init_log
+
+- name: Fetch k3s-init.service status
+  ansible.builtin.command:
+    cmd: >-
+      timeout --signal=TERM --kill-after=5s 15s systemctl status
+      k3s-init.service --no-pager --full
+  changed_when: false
+  failed_when: false
+  no_log: true
+  register: k3s_init_status
 
 - name: Create {{ log_destination }}
   delegate_to: localhost
@@ -28,4 +38,7 @@
     dest: "{{ log_destination }}/k3s-init@{{ ansible_hostname }}.log"
     mode: "0644"
   vars:
-    content: "{{ k3s_init_log.stdout }}"
+    content: >-
+      {{ ('=== k3s-init.service status ===\n' + k3s_init_status.stdout
+      + '\n\n=== k3s-init.service journal ===\n' + k3s_init_log.stdout)
+      | regex_replace('--token(?:=|\\s+)[^\\s]+', '--token ***') }}

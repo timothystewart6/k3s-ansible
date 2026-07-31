@@ -34,10 +34,30 @@
   tags: kubevip
   when: kube_vip_lb_ip_range is defined
 
-- name: Init cluster inside the transient k3s-init service
+- name: Init the first master inside the transient k3s-init service
   ansible.builtin.command:
     cmd: systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server {{ server_init_args }}
     creates: "{{ systemd_dir }}/k3s-init.service"
+  when: ansible_hostname == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
+
+- name: Wait for the first master Kubernetes API before joining other masters
+  ansible.builtin.command:
+    cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} get --raw=/readyz"
+  register: first_master_api
+  until: first_master_api.rc == 0
+  retries: "{{ retry_count | default(20) }}"
+  delay: 2
+  changed_when: false
+  run_once: true
+  when: groups[group_name_master | default('master')] | length > 1
+
+- name: Join additional masters inside the transient k3s-init service
+  ansible.builtin.command:
+    cmd: systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server {{ server_init_args }}
+    creates: "{{ systemd_dir }}/k3s-init.service"
+  when:
+    - groups[group_name_master | default('master')] | length > 1
+    - ansible_hostname != hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
 
 - name: Verification
   when: not ansible_check_mode
