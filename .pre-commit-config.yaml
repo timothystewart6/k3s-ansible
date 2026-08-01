@@ -56,3 +56,9 @@ repos:
         language: system
         pass_filenames: false
         files: ^\.github/scripts/(prepare-vagrant-box-masters|test-prepare-vagrant-box-masters)\.sh$
+      - id: k3s-server-bootstrap-test
+        name: K3s transient bootstrap test
+        entry: .github/scripts/test-k3s-server-bootstrap.sh
+        language: system
+        pass_filenames: false
+        files: ^roles/k3s_server/tasks/(main|join_master)\.yml$|^\.github/scripts/test-k3s-server-bootstrap\.sh$

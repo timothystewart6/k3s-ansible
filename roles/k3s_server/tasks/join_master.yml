@@ -12,7 +12,10 @@
 - name: Join transient k3s-init service for {{ joining_master }}
   ansible.builtin.command:
     cmd: >-
-      systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init
+      systemd-run -p RestartSec=2 -p Restart=on-failure
+      -p Delegate=yes -p TasksMax=infinity -p KillMode=process
+      -p LimitNOFILE=1048576 -p LimitNPROC=infinity -p LimitCORE=infinity
+      --unit=k3s-init
       k3s server {{ hostvars[joining_master].k3s_server_init_args }}
     creates: "{{ systemd_dir }}/k3s-init.service"
   delegate_to: "{{ joining_master }}"
