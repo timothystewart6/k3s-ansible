@@ -2,6 +2,8 @@
 name: "CI"
 on:
   pull_request:
+    branches:
+      - master
     types:
       - opened
       - synchronize
@@ -18,7 +20,6 @@ on:
       - '**/LICENSE'
       - '**/reboot.sh'
       - '**/reset.sh'
-  workflow_dispatch:
 
 permissions:
   contents: read
