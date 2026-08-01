@@ -22,6 +22,71 @@
   no_log: true
   register: k3s_init_status
 
+- name: Fetch IP address state
+  ansible.builtin.command:
+    cmd: ip -br address
+  changed_when: false
+  failed_when: false
+  no_log: true
+  register: k3s_ip_address_state
+
+- name: Fetch IP route state
+  ansible.builtin.command:
+    cmd: ip route show
+  changed_when: false
+  failed_when: false
+  no_log: true
+  register: k3s_ip_route_state
+
+- name: Fetch IP neighbor state
+  ansible.builtin.command:
+    cmd: ip neigh show
+  changed_when: false
+  failed_when: false
+  no_log: true
+  register: k3s_ip_neighbor_state
+
+- name: Fetch IP rule state
+  ansible.builtin.command:
+    cmd: ip rule show
+  changed_when: false
+  failed_when: false
+  no_log: true
+  register: k3s_ip_rule_state
+
+- name: Fetch listening TCP sockets
+  ansible.builtin.command:
+    cmd: ss -ltn
+  changed_when: false
+  failed_when: false
+  no_log: true
+  register: k3s_tcp_listener_state
+
+- name: Ping the primary Kubernetes API address from {{ ansible_hostname }}
+  ansible.builtin.command:
+    argv:
+      - ping
+      - -c
+      - "1"
+      - -W
+      - "1"
+      - "{{ hostvars[groups[group_name_master | default('master')][0]].k3s_node_ip | split(',') | first }}"
+  changed_when: false
+  failed_when: false
+  no_log: true
+  register: k3s_primary_api_ping
+
+- name: Probe primary Kubernetes API from {{ ansible_hostname }}
+  ansible.builtin.wait_for:
+    host: "{{ hostvars[groups[group_name_master | default('master')][0]].k3s_node_ip | split(',') | first }}"
+    port: 6443
+    connect_timeout: 1
+    timeout: 2
+  changed_when: false
+  failed_when: false
+  no_log: true
+  register: k3s_primary_api_probe
+
 - name: Create {{ log_destination }}
   delegate_to: localhost
   run_once: true
@@ -45,3 +110,37 @@
 
       === k3s-init.service journal ===
       {{ k3s_init_log.stdout | regex_replace('--token(?:=| +)[^ ]+', '--token ***') }}
+
+- name: Store network diagnostics to {{ log_destination }}
+  delegate_to: localhost
+  become: false
+  ansible.builtin.template:
+    src: content.j2
+    dest: "{{ log_destination }}/network@{{ ansible_hostname }}.log"
+    mode: "0644"
+  vars:
+    content: |
+      === ip -br address ===
+      {{ k3s_ip_address_state.stdout }}
+
+      === ip route show ===
+      {{ k3s_ip_route_state.stdout }}
+
+      === ip neigh show ===
+      {{ k3s_ip_neighbor_state.stdout }}
+
+      === ip rule show ===
+      {{ k3s_ip_rule_state.stdout }}
+
+      === ss -ltn ===
+      {{ k3s_tcp_listener_state.stdout }}
+
+      === primary API ping ===
+      rc={{ k3s_primary_api_ping.rc }}
+      {{ k3s_primary_api_ping.stdout }}
+      {{ k3s_primary_api_ping.stderr }}
+
+      === primary API probe ===
+      failed={{ k3s_primary_api_probe.failed | default(false) }}
+      elapsed={{ k3s_primary_api_probe.elapsed | default('unknown') }}
+      msg={{ k3s_primary_api_probe.msg | default('connected') }}

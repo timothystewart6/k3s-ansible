@@ -34,43 +34,64 @@
   tags: kubevip
   when: kube_vip_lb_ip_range is defined
 
-- name: Init the first master inside the transient k3s-init service
-  ansible.builtin.command:
-    cmd: systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server {{ server_init_args }}
-    creates: "{{ systemd_dir }}/k3s-init.service"
-  no_log: true
-  when: ansible_hostname == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
-
-- name: Wait for the first master Kubernetes API before joining other masters
-  ansible.builtin.command:
-    cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} get --raw=/readyz"
-  register: first_master_api
-  until: first_master_api.rc == 0
-  retries: "{{ retry_count | default(20) }}"
-  delay: 2
-  changed_when: false
-  run_once: true
-  when: groups[group_name_master | default('master')] | length > 1
-
-- name: Join additional masters one at a time
-  ansible.builtin.include_tasks: join_master.yml
-  loop: "{{ groups[group_name_master | default('master')][1:] }}"
-  loop_control:
-    loop_var: joining_master
-  run_once: true
-  when: groups[group_name_master | default('master')] | length > 1
-
-- name: Verification
+- name: Initialize and verify the K3s control plane
   when: not ansible_check_mode
   block:
+    - name: Materialize per-host server initialization arguments
+      ansible.builtin.set_fact:
+        k3s_server_init_args: "{{ server_init_args }}"
+      no_log: true
+      when: groups[group_name_master | default('master')] | length > 1
+
+    - name: Init the first master inside the transient k3s-init service
+      ansible.builtin.command:
+        cmd: >-
+          systemd-run -p RestartSec=2 -p Restart=on-failure
+          --unit=k3s-init k3s server {{ server_init_args }}
+        creates: "{{ systemd_dir }}/k3s-init.service"
+      no_log: true
+      when: inventory_hostname == groups[group_name_master | default('master')][0]
+
+    - name: Wait for the first master Kubernetes API
+      ansible.builtin.command:
+        cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} get --raw=/readyz"
+      delegate_to: "{{ groups[group_name_master | default('master')][0] }}"
+      register: first_master_api
+      until: first_master_api.rc == 0
+      retries: "{{ retry_count | default(20) }}"
+      delay: 2
+      changed_when: false
+      run_once: true
+
+    - name: Verify the first master API listener on its node address
+      ansible.builtin.wait_for:
+        host: >-
+          {{ hostvars[groups[group_name_master | default('master')][0]].k3s_node_ip
+          | split(',') | first }}
+        port: 6443
+        connect_timeout: 2
+        timeout: "{{ retry_count | default(20) * 2 }}"
+      delegate_to: "{{ groups[group_name_master | default('master')][0] }}"
+      run_once: true
+
+    - name: Join additional masters one at a time
+      ansible.builtin.include_tasks: join_master.yml
+      loop: "{{ groups[group_name_master | default('master')][1:] }}"
+      loop_control:
+        loop_var: joining_master
+      run_once: true
+      when: groups[group_name_master | default('master')] | length > 1
+
     - name: Verify that all nodes actually joined (check k3s-init.service if this fails)
       ansible.builtin.command:
         cmd: "{{ k3s_kubectl_binary | default('k3s kubectl') }} get nodes -l 'node-role.kubernetes.io/master=true' -o=jsonpath='{.items[*].metadata.name}'" # yamllint disable-line rule:line-length
+      delegate_to: "{{ groups[group_name_master | default('master')][0] }}"
       register: nodes
       until: nodes.rc == 0 and (nodes.stdout.split() | length) == (groups[group_name_master | default('master')] | length) # yamllint disable-line rule:line-length
       retries: "{{ retry_count | default(20) }}"
       delay: 10
       changed_when: false
+      run_once: true
   always:
     - name: Save logs of k3s-init.service
       ansible.builtin.include_tasks: fetch_k3s_init_logs.yml

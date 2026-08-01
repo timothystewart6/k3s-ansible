@@ -21,6 +21,33 @@
         state: stopped
       become: true
 
+    - name: Verify the private cluster interface
+      ansible.builtin.assert:
+        that:
+          - flannel_iface in ansible_facts
+          - ansible_facts[flannel_iface].ipv4 is defined
+          - ansible_facts[flannel_iface].ipv4.address is defined
+        fail_msg: >-
+          The Vagrant private interface {{ flannel_iface }} does not have an
+          IPv4 address on {{ inventory_hostname }}.
+
+    - name: Verify guest-to-guest cluster network reachability
+      ansible.builtin.command:
+        argv:
+          - ping
+          - -c
+          - "1"
+          - -W
+          - "1"
+          - >-
+            {{ hostvars[groups[group_name_master | default('master')][0]].k3s_node_ip
+            | split(',') | first }}
+      register: primary_cluster_ping
+      until: primary_cluster_ping.rc == 0
+      retries: 6
+      delay: 2
+      changed_when: false
+
     - name: Verify GitHub release host DNS
       ansible.builtin.getent:
         database: hosts
