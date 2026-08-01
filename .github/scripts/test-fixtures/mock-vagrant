@@ -5,6 +5,9 @@ set -Eeuo pipefail
 printf '%s\n' "$*" >> "$MOCK_VAGRANT_LOG"
 case "${1:-}" in
   up)
+    if [[ -n "${MOCK_VAGRANTFILE_CAPTURE:-}" ]]; then
+      cp -- "$VAGRANT_CWD/Vagrantfile" "$MOCK_VAGRANTFILE_CAPTURE"
+    fi
     counter_file="$MOCK_VBOX_STATE/counter"
     counter=0
     [[ ! -r "$counter_file" ]] || counter="$(cat "$counter_file")"
