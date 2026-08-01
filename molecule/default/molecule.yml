@@ -3,6 +3,11 @@ dependency:
   name: galaxy
 driver:
   name: vagrant
+  # The Vagrant driver warns that parallel VirtualBox creation can cause
+  # platform issues. This five-node, mixed-distribution scenario is especially
+  # susceptible to stale host-only-network neighbor state when all guests are
+  # created concurrently.
+  parallel: false
 platforms:
   - name: control1
     box: generic/ubuntu2204

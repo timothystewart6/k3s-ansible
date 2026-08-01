@@ -5,6 +5,18 @@
 
 - name: Network setup
   hosts: all
+  vars:
+    primary_master: "{{ groups[group_name_master | default('master')][0] }}"
+    primary_cluster_ip: >-
+      {{ hostvars[primary_master].k3s_node_ip | split(',') | first }}
+    cluster_interface: >-
+      {{ cilium_iface | default(calico_iface | default(flannel_iface)) }}
+    primary_cluster_interface: >-
+      {{ hostvars[primary_master].cilium_iface
+      | default(hostvars[primary_master].calico_iface
+      | default(hostvars[primary_master].flannel_iface)) }}
+    primary_cluster_mac: >-
+      {{ hostvars[primary_master].ansible_facts[primary_cluster_interface].macaddress }}
   tasks:
     - name: Gather service facts
       ansible.builtin.service_facts:
@@ -37,6 +49,20 @@
           The Vagrant private interface {{ flannel_iface }} does not have an
           IPv4 address on {{ inventory_hostname }}.
 
+    - name: Clear cached primary neighbor entry
+      ansible.builtin.command:
+        argv:
+          - ip
+          - neigh
+          - flush
+          - to
+          - "{{ primary_cluster_ip }}"
+          - dev
+          - "{{ cluster_interface }}"
+      become: true
+      changed_when: false
+      when: inventory_hostname != primary_master
+
     - name: Verify guest-to-guest cluster network reachability
       ansible.builtin.command:
         argv:
@@ -45,14 +71,36 @@
           - "1"
           - -W
           - "1"
-          - >-
-            {{ hostvars[groups[group_name_master | default('master')][0]].k3s_node_ip
-            | split(',') | first }}
+          - "{{ primary_cluster_ip }}"
       register: primary_cluster_ping
       until: primary_cluster_ping.rc == 0
       retries: 6
       delay: 2
       changed_when: false
+
+    - name: Read the primary neighbor entry
+      ansible.builtin.command:
+        argv:
+          - ip
+          - neigh
+          - show
+          - to
+          - "{{ primary_cluster_ip }}"
+          - dev
+          - "{{ cluster_interface }}"
+      register: primary_cluster_neighbor
+      changed_when: false
+      when: inventory_hostname != primary_master
+
+    - name: Verify the primary neighbor identity
+      ansible.builtin.assert:
+        that:
+          - (primary_cluster_mac | lower) in (primary_cluster_neighbor.stdout | lower)
+        fail_msg: >-
+          {{ inventory_hostname }} resolved primary {{ primary_cluster_ip }} to
+          an unexpected MAC on {{ cluster_interface }}. Expected
+          {{ primary_cluster_mac }}, got: {{ primary_cluster_neighbor.stdout }}
+      when: inventory_hostname != primary_master
 
     - name: Verify GitHub release host DNS
       ansible.builtin.getent:

@@ -30,6 +30,14 @@
   no_log: true
   register: k3s_ip_address_state
 
+- name: Fetch IP link state
+  ansible.builtin.command:
+    cmd: ip -br link
+  changed_when: false
+  failed_when: false
+  no_log: true
+  register: k3s_ip_link_state
+
 - name: Fetch IP route state
   ansible.builtin.command:
     cmd: ip route show
@@ -135,6 +143,9 @@
     content: |
       === ip -br address ===
       {{ k3s_ip_address_state.stdout }}
+
+      === ip -br link ===
+      {{ k3s_ip_link_state.stdout }}
 
       === ip route show ===
       {{ k3s_ip_route_state.stdout }}
