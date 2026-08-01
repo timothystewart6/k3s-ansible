@@ -6,8 +6,8 @@
       ansible.builtin.set_fact:
         # See:
         # https://github.com/flannel-io/flannel/blob/67d603aaf45ef80f5dd39f43714fc5e6f8a637eb/Documentation/troubleshooting.md#Vagrant
-        calico_iface: eth1
-        kube_vip_iface: eth1
+        calico_iface: enp0s8
+        kube_vip_iface: enp0s8
 
         # The test VMs might be a bit slow, so we give them more time to join the cluster:
         retry_count: 45
