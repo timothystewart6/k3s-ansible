@@ -49,19 +49,34 @@
           The Vagrant private interface {{ flannel_iface }} does not have an
           IPv4 address on {{ inventory_hostname }}.
 
-    - name: Clear cached primary neighbor entry
+    - name: Pin disposable cluster peer neighbor entries
       ansible.builtin.command:
         argv:
           - ip
           - neigh
-          - flush
-          - to
-          - "{{ primary_cluster_ip }}"
+          - replace
+          - "{{ peer_cluster_ip }}"
+          - lladdr
+          - "{{ peer_cluster_mac }}"
+          - nud
+          - permanent
           - dev
           - "{{ cluster_interface }}"
       become: true
       changed_when: false
-      when: inventory_hostname != primary_master
+      loop: "{{ groups['k3s_cluster'] }}"
+      loop_control:
+        label: "{{ inventory_hostname }} -> {{ item }}"
+      vars:
+        peer_cluster_interface: >-
+          {{ hostvars[item].cilium_iface
+          | default(hostvars[item].calico_iface
+          | default(hostvars[item].flannel_iface)) }}
+        peer_cluster_ip: >-
+          {{ hostvars[item].k3s_node_ip | split(',') | first }}
+        peer_cluster_mac: >-
+          {{ hostvars[item].ansible_facts[peer_cluster_interface].macaddress }}
+      when: item != inventory_hostname
 
     - name: Verify guest-to-guest cluster network reachability
       ansible.builtin.command:

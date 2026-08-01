@@ -14,12 +14,13 @@ platforms:
     groups:
       - k3s_cluster
       - master
+    # Keep adapter 2 stable across linked-clone rebuilds so stale host-only
+    # neighbor state still identifies the current scenario guest.
+    provider_raw_config_args:
+      - "customize ['modifyvm', :id, '--mac-address2', '080027A13038']"
     interfaces:
       - network_name: private_network
         ip: 192.168.30.38
-        # Keep this cluster off the persistent vboxnet0 host-only switch. The
-        # NAT adapter remains available for SSH and Internet access.
-        virtualbox__intnet: k3s-ansible-default
     config_options:
       # We currently can not use public-key based authentication on Ubuntu 22.04,
       # see: https://github.com/chef/bento/issues/1405
@@ -33,10 +34,11 @@ platforms:
     groups:
       - k3s_cluster
       - master
+    provider_raw_config_args:
+      - "customize ['modifyvm', :id, '--mac-address2', '080027A13039']"
     interfaces:
       - network_name: private_network
         ip: 192.168.30.39
-        virtualbox__intnet: k3s-ansible-default
 
   - name: control3
     box: generic/rocky9
@@ -45,10 +47,11 @@ platforms:
     groups:
       - k3s_cluster
       - master
+    provider_raw_config_args:
+      - "customize ['modifyvm', :id, '--mac-address2', '080027A13040']"
     interfaces:
       - network_name: private_network
         ip: 192.168.30.40
-        virtualbox__intnet: k3s-ansible-default
 
   - name: node1
     box: generic/ubuntu2204
@@ -57,10 +60,11 @@ platforms:
     groups:
       - k3s_cluster
       - node
+    provider_raw_config_args:
+      - "customize ['modifyvm', :id, '--mac-address2', '080027A13041']"
     interfaces:
       - network_name: private_network
         ip: 192.168.30.41
-        virtualbox__intnet: k3s-ansible-default
     config_options:
       # We currently can not use public-key based authentication on Ubuntu 22.04,
       # see: https://github.com/chef/bento/issues/1405
@@ -74,10 +78,11 @@ platforms:
     groups:
       - k3s_cluster
       - node
+    provider_raw_config_args:
+      - "customize ['modifyvm', :id, '--mac-address2', '080027A13042']"
     interfaces:
       - network_name: private_network
         ip: 192.168.30.42
-        virtualbox__intnet: k3s-ansible-default
 
 provisioner:
   name: ansible
