@@ -40,18 +40,17 @@ jobs:
         id: cache-vagrant
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # 6.1.0
         with:
-          lookup-only: true # if it exists, we don't need to restore and can skip the next step
+          # This producer only needs to know whether the immutable cache exists.
+          # Molecule jobs restore it after this job completes.
+          lookup-only: true
           path: |
             .vagrant-home/boxes
-          key: vagrant-boxes-${{ runner.os }}-${{ runner.arch }}-virtualbox-7.2-vagrant-2.4-${{ hashFiles('**/molecule.yml') }} # yamllint disable-line rule:line-length
-          restore-keys: |
-            vagrant-boxes-${{ runner.os }}-${{ runner.arch }}-virtualbox-7.2-vagrant-2.4-
+          key: vagrant-boxes-${{ runner.os }}-${{ runner.arch }}-virtualbox-7.2-vagrant-2.4-${{ hashFiles('.github/vagrant-boxes.lock') }} # yamllint disable-line rule:line-length
 
       - name: Download Vagrant boxes for all scenarios
-        # To save some cache space, all scenarios share the same cache key.
-        # On the other hand, this means that the cache contents should be
-        # the same across all scenarios. This step ensures that.
-        if: steps.cache-vagrant.outputs.cache-hit != 'true' # only run if false since this is just a cache step
+        # An exact hit skips both cache restoration and upstream downloads.
+        # A lock change builds and saves one clean, version-pinned cache.
+        if: steps.cache-vagrant.outputs.cache-hit != 'true'
         run: |
           ./.github/download-boxes.sh
           vagrant box list

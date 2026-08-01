@@ -44,3 +44,9 @@ repos:
         language: system
         pass_filenames: false
         files: ^\.github/scripts/(cleanup-runner-resources|test-cleanup-runner-resources)\.sh$
+      - id: download-vagrant-boxes-test
+        name: Vagrant box download test
+        entry: .github/test-download-boxes.sh
+        language: system
+        pass_filenames: false
+        files: ^\.github/(download-boxes|test-download-boxes)\.sh$|^\.github/vagrant-boxes\.lock$

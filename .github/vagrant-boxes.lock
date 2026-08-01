@@ -1,0 +1,4 @@
+# box version architecture
+generic/debian12 4.3.12 amd64
+generic/rocky9 4.3.12 amd64
+generic/ubuntu2204 4.3.12 amd64
