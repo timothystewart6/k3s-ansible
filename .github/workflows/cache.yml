@@ -45,7 +45,7 @@ jobs:
           lookup-only: true
           path: |
             .vagrant-home/boxes
-          key: vagrant-boxes-${{ runner.os }}-${{ runner.arch }}-virtualbox-7.2-vagrant-2.4-${{ hashFiles('.github/vagrant-boxes.lock') }} # yamllint disable-line rule:line-length
+          key: vagrant-boxes-${{ runner.name }}-${{ runner.os }}-${{ runner.arch }}-virtualbox-7.2-vagrant-2.4-${{ hashFiles('.github/vagrant-boxes.lock') }} # yamllint disable-line rule:line-length
 
       - name: Download Vagrant boxes for all scenarios
         # An exact hit skips both cache restoration and upstream downloads.
@@ -53,4 +53,5 @@ jobs:
         if: steps.cache-vagrant.outputs.cache-hit != 'true'
         run: |
           ./.github/download-boxes.sh
+          ./.github/scripts/prepare-vagrant-box-masters.sh
           vagrant box list

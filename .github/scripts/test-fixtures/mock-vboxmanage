@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+printf '%s\n' "$*" >> "$MOCK_VBOX_LOG"
+command_name="${1:-}"
+uuid="${2:-}"
+
+case "$command_name" in
+  showvminfo)
+    [[ -r "$MOCK_VBOX_STATE/vm-$uuid" ]] || exit 1
+    cat "$MOCK_VBOX_STATE/vm-$uuid"
+    ;;
+  getextradata)
+    key_slug="${3//\//_}"
+    if [[ ! -r "$MOCK_VBOX_STATE/extra-$uuid-$key_slug" ]]; then
+      printf '%s\n' 'No value set!'
+      exit 0
+    fi
+    printf 'Value: '
+    cat "$MOCK_VBOX_STATE/extra-$uuid-$key_slug"
+    ;;
+  modifyvm)
+    [[ "${3:-}" == --groups ]]
+    awk -v groups="${4:-}" '
+      $1 !~ /^groups=/ { print }
+      END { printf "groups=\"%s\"\n", groups }
+    ' "$MOCK_VBOX_STATE/vm-$uuid" > "$MOCK_VBOX_STATE/vm-$uuid.tmp"
+    mv "$MOCK_VBOX_STATE/vm-$uuid.tmp" "$MOCK_VBOX_STATE/vm-$uuid"
+    ;;
+  setextradata)
+    key_slug="${3//\//_}"
+    printf '%s\n' "${4:-}" > "$MOCK_VBOX_STATE/extra-$uuid-$key_slug"
+    ;;
+  unregistervm|closemedium)
+    printf '%s\n' 'destructive VirtualBox command invoked' >&2
+    exit 99
+    ;;
+  *) exit 2 ;;
+esac

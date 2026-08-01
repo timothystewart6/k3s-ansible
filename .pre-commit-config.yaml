@@ -50,3 +50,9 @@ repos:
         language: system
         pass_filenames: false
         files: ^\.github/(download-boxes|test-download-boxes)\.sh$|^\.github/vagrant-boxes\.lock$
+      - id: prepare-vagrant-box-masters-test
+        name: Vagrant box master preparation test
+        entry: .github/scripts/test-prepare-vagrant-box-masters.sh
+        language: system
+        pass_filenames: false
+        files: ^\.github/scripts/(prepare-vagrant-box-masters|test-prepare-vagrant-box-masters)\.sh$

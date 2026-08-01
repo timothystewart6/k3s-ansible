@@ -89,6 +89,7 @@ provisioner:
   env:
     ANSIBLE_VERBOSITY: 1
   playbooks:
+    create: create.yml
     converge: ../resources/converge.yml
     side_effect: ../resources/reset.yml
     verify: ../resources/verify.yml

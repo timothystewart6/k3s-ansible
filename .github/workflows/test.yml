@@ -57,8 +57,11 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # 6.1.0
         with:
           path: .vagrant-home/boxes
-          key: vagrant-boxes-${{ runner.os }}-${{ runner.arch }}-virtualbox-7.2-vagrant-2.4-${{ hashFiles('.github/vagrant-boxes.lock') }} # yamllint disable-line rule:line-length
+          key: vagrant-boxes-${{ runner.name }}-${{ runner.os }}-${{ runner.arch }}-virtualbox-7.2-vagrant-2.4-${{ hashFiles('.github/vagrant-boxes.lock') }} # yamllint disable-line rule:line-length
           fail-on-cache-miss: true
+
+      - name: Prepare runner-owned Vagrant box masters
+        run: ./.github/scripts/prepare-vagrant-box-masters.sh
 
       - name: Install dependencies
         run: |
@@ -71,7 +74,20 @@ jobs:
           echo "::endgroup::"
 
       - name: Test with molecule
-        run: molecule test --scenario-name ${{ matrix.scenario }}
+        run: |
+          set -Eeuo pipefail
+          resource_dir="${RUNNER_TEMP}/logs/resources/${{ matrix.scenario }}"
+          timing_file="${RUNNER_TEMP}/logs/timing/${{ matrix.scenario }}.txt"
+          mkdir -p -- "${timing_file%/*}"
+          ./.github/scripts/monitor-runner-resources.sh "$resource_dir" 10 &
+          monitor_pid=$!
+          stop_monitor() {
+            kill -TERM "$monitor_pid" 2>/dev/null || true
+            wait "$monitor_pid" 2>/dev/null || true
+          }
+          trap stop_monitor EXIT
+          /usr/bin/time -v -o "$timing_file" \
+            molecule test --scenario-name ${{ matrix.scenario }}
         timeout-minutes: 90
         env:
           ANSIBLE_K3S_LOG_DIR: ${{ runner.temp }}/logs/k3s-ansible/${{ matrix.scenario }}
@@ -79,10 +95,13 @@ jobs:
           ANSIBLE_TIMEOUT: 120
           PY_COLORS: 1
           ANSIBLE_FORCE_COLOR: 1
+          K3S_CI_CREATE_TIMING_LOG: ${{ runner.temp }}/logs/timing/${{ matrix.scenario }}-create.log
 
       - name: Collect runner diagnostics
         if: always()
         run: ./.github/scripts/collect-runner-diagnostics.sh "${RUNNER_TEMP}/logs/runner"
+        env:
+          K3S_CI_SCENARIO_NAME: ${{ matrix.scenario }}
 
       - name: Clean repository-owned resources after testing
         if: always()

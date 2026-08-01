@@ -1,0 +1,87 @@
+---
+- name: Create
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  no_log: "{{ molecule_no_log }}"
+  vars:
+    create_batches:
+      - [control1, control2]
+      - [control3, node1]
+      - [node2]
+  tasks:
+    - name: Verify that bounded batches cover the configured platforms exactly once
+      ansible.builtin.assert:
+        that:
+          - create_batches | flatten | sort == molecule_yml.platforms | map(attribute='name') | sort
+          - create_batches | flatten | length == create_batches | flatten | unique | length
+          - create_batches | map('length') | max <= 2
+        fail_msg: Bounded create batches do not match the configured default platforms.
+
+    - name: Check for existing Vagrant machine state
+      ansible.builtin.stat:
+        path: "{{ molecule_ephemeral_directory }}/.vagrant/machines"
+      register: vagrant_machine_state
+
+    - name: Generate the complete Vagrant configuration for a clean create # noqa fqcn[action]
+      vagrant:
+        instances: "{{ molecule_yml.platforms }}"
+        default_box: "{{ molecule_yml.driver.default_box | default('generic/alpine316') }}"
+        provider_name: "{{ molecule_yml.driver.provider.name | default(omit, true) }}"
+        provision: "{{ molecule_yml.driver.provision | default(omit) }}"
+        cachier: "{{ molecule_yml.driver.cachier | default(omit) }}"
+        parallel: false
+        state: halt
+      when: not vagrant_machine_state.stat.exists
+      changed_when: false
+
+    - name: Start clean Vagrant guests in bounded batches
+      ansible.builtin.command:
+        argv: >-
+          {{
+            [molecule_project_directory + '/.github/scripts/vagrant-up-timed.sh',
+             molecule_ephemeral_directory] + item
+          }}
+      loop: "{{ create_batches }}"
+      loop_control:
+        label: "{{ item | join(', ') }}"
+      when: not vagrant_machine_state.stat.exists
+      changed_when: true
+
+    - name: Reconcile all instances and collect their connection configuration # noqa fqcn[action]
+      vagrant:
+        instances: "{{ molecule_yml.platforms }}"
+        default_box: "{{ molecule_yml.driver.default_box | default('generic/alpine316') }}"
+        provider_name: "{{ molecule_yml.driver.provider.name | default(omit, true) }}"
+        provision: "{{ molecule_yml.driver.provision | default(omit) }}"
+        cachier: "{{ molecule_yml.driver.cachier | default(omit) }}"
+        parallel: false
+        state: up
+      register: server
+      no_log: false
+
+    - name: Populate instance configuration dictionaries
+      ansible.builtin.set_fact:
+        instance_conf_dict:
+          instance: "{{ item.Host }}"
+          address: "{{ item.HostName }}"
+          user: "{{ item.User }}"
+          port: "{{ item.Port }}"
+          identity_file: "{{ item.IdentityFile }}"
+      loop: "{{ server.results }}"
+      register: instance_config_dict
+
+    - name: Convert instance configuration dictionaries to a list
+      ansible.builtin.set_fact:
+        instance_conf: >-
+          {{
+            instance_config_dict.results
+            | map(attribute='ansible_facts.instance_conf_dict')
+            | list
+          }}
+
+    - name: Write Molecule instance configuration
+      ansible.builtin.copy:
+        content: "{{ instance_conf | to_json | from_json | to_yaml }}"
+        dest: "{{ molecule_instance_config }}"
+        mode: "0600"

@@ -20,3 +20,8 @@ exclude_paths:
 
 skip_list:
   - var-naming[no-role-prefix]
+
+# The Molecule Vagrant driver injects this module at runtime. The custom create
+# playbook is syntax-checked separately against the exact pinned plugin module.
+mock_modules:
+  - vagrant

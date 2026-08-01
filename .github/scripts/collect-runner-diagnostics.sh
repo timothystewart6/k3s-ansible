@@ -26,8 +26,19 @@ run_capture virtualbox-vms VBoxManage list vms
 run_capture virtualbox-running-vms VBoxManage list runningvms
 run_capture virtualbox-disks VBoxManage list hdds
 run_capture virtualbox-hostonlyifs VBoxManage list hostonlyifs
+run_capture virtualbox-groups VBoxManage list groups
 run_capture vagrant-status vagrant global-status
 run_capture molecule-state find "${HOME}/.cache/molecule" -maxdepth 6 -type f -path '*/.vagrant/machines/*/virtualbox/id' -print
+
+scenario_name="${K3S_CI_SCENARIO_NAME:-}"
+if [[ "$scenario_name" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  molecule_state_dir="${HOME}/.cache/molecule/k3s-ansible/${scenario_name}"
+  for log_name in vagrant.out vagrant.err; do
+    if [[ -r "${molecule_state_dir}/${log_name}" ]]; then
+      cp -- "${molecule_state_dir}/${log_name}" "$output_dir/${scenario_name}-${log_name}"
+    fi
+  done
+fi
 
 if [[ -r /etc/vbox/networks.conf ]]; then
   cp -- /etc/vbox/networks.conf "$output_dir/virtualbox-networks.conf"

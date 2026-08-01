@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+printf '%s\n' "$*" >> "$MOCK_VAGRANT_LOG"
+case "${1:-}" in
+  up)
+    counter_file="$MOCK_VBOX_STATE/counter"
+    counter=0
+    [[ ! -r "$counter_file" ]] || counter="$(cat "$counter_file")"
+    counter=$((counter + 1))
+    printf '%s\n' "$counter" > "$counter_file"
+    uuid="00000000-0000-4000-8000-$(printf '%012d' "$counter")"
+    vm_dir="$MOCK_VBOX_ROOT/master-$counter"
+    mkdir -p -- "$vm_dir"
+    : > "$vm_dir/master.vbox"
+    : > "$vm_dir/master.vdi"
+    printf '%s\n' \
+      'VMState="poweroff"' \
+      'groups="/"' \
+      "CfgFile=\"$vm_dir/master.vbox\"" \
+      "SATA-0-0=\"$vm_dir/master.vdi\"" > "$MOCK_VBOX_STATE/vm-$uuid"
+    printf '%s\n' "$uuid" > "$MOCK_BOX_DIR/master_id"
+    ;;
+  destroy) ;;
+  *) exit 2 ;;
+esac
