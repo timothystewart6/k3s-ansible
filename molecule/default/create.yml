@@ -18,12 +18,7 @@
           - create_batches | map('length') | max <= 2
         fail_msg: Bounded create batches do not match the configured default platforms.
 
-    - name: Check for existing Vagrant machine state
-      ansible.builtin.stat:
-        path: "{{ molecule_ephemeral_directory }}/.vagrant/machines"
-      register: vagrant_machine_state
-
-    - name: Generate the complete Vagrant configuration for a clean create # noqa fqcn[action]
+    - name: Generate the complete Vagrant configuration # noqa fqcn[action]
       vagrant:
         instances: "{{ molecule_yml.platforms }}"
         default_box: "{{ molecule_yml.driver.default_box | default('generic/alpine316') }}"
@@ -32,7 +27,6 @@
         cachier: "{{ molecule_yml.driver.cachier | default(omit) }}"
         parallel: false
         state: halt
-      when: not vagrant_machine_state.stat.exists
       changed_when: false
 
     - name: Start clean Vagrant guests in bounded batches
@@ -45,7 +39,6 @@
       loop: "{{ create_batches }}"
       loop_control:
         label: "{{ item | join(', ') }}"
-      when: not vagrant_machine_state.stat.exists
       changed_when: true
 
     - name: Reconcile all instances and collect their connection configuration # noqa fqcn[action]
