@@ -70,14 +70,6 @@ write_prewarm_vagrantfile() {
     printf '%s\n' "Vagrant.configure('2') do |config|"
     printf '  config.vm.box = "%s"\n' "$box"
     printf '  config.vm.box_version = "%s"\n' "$version"
-    # generic/ubuntu2204 does not accept Vagrant's bundled insecure key.
-    # Match the repository's Molecule connection settings for the short-lived
-    # prewarm clone so Vagrant can record its linked-clone master.
-    if [[ "$box" == 'generic/ubuntu2204' ]]; then
-      printf '%s\n' \
-        '  config.ssh.username = "vagrant"' \
-        '  config.ssh.password = "vagrant"'
-    fi
     printf '%s\n' \
       '  config.vm.synced_folder ".", "/vagrant", disabled: true' \
       '  config.vm.hostname = "k3s-ansible-box-prewarm"' \

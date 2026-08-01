@@ -8,7 +8,7 @@ driver:
   parallel: false
 platforms:
   - name: control1
-    box: generic/ubuntu2204
+    box: bento/ubuntu-26.04
     memory: 1024
     cpus: 2
     groups:
@@ -21,14 +21,9 @@ platforms:
     interfaces:
       - network_name: private_network
         ip: 192.168.30.38
-    config_options:
-      # We currently can not use public-key based authentication on Ubuntu 22.04,
-      # see: https://github.com/chef/bento/issues/1405
-      ssh.username: vagrant
-      ssh.password: vagrant
 
   - name: control2
-    box: generic/debian12
+    box: bento/debian-13
     memory: 1024
     cpus: 2
     groups:
@@ -41,7 +36,7 @@ platforms:
         ip: 192.168.30.39
 
   - name: control3
-    box: generic/rocky9
+    box: bento/rockylinux-10.1
     memory: 1024
     cpus: 2
     groups:
@@ -54,7 +49,7 @@ platforms:
         ip: 192.168.30.40
 
   - name: node1
-    box: generic/ubuntu2204
+    box: bento/ubuntu-26.04
     memory: 1024
     cpus: 2
     groups:
@@ -65,14 +60,9 @@ platforms:
     interfaces:
       - network_name: private_network
         ip: 192.168.30.41
-    config_options:
-      # We currently can not use public-key based authentication on Ubuntu 22.04,
-      # see: https://github.com/chef/bento/issues/1405
-      ssh.username: vagrant
-      ssh.password: vagrant
 
   - name: node2
-    box: generic/rocky9
+    box: bento/rockylinux-10.1
     memory: 1024
     cpus: 2
     groups:

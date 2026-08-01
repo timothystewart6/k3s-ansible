@@ -5,7 +5,7 @@ driver:
   name: vagrant
 platforms:
   - name: control1
-    box: generic/ubuntu2204
+    box: bento/ubuntu-26.04
     memory: 1024
     cpus: 2
     groups:
@@ -14,14 +14,9 @@ platforms:
     interfaces:
       - network_name: private_network
         ip: fdad:bad:ba55::de:11
-    config_options:
-      # We currently can not use public-key based authentication on Ubuntu 22.04,
-      # see: https://github.com/chef/bento/issues/1405
-      ssh.username: vagrant
-      ssh.password: vagrant
 
   - name: control2
-    box: generic/ubuntu2204
+    box: bento/ubuntu-26.04
     memory: 1024
     cpus: 2
     groups:
@@ -30,14 +25,9 @@ platforms:
     interfaces:
       - network_name: private_network
         ip: fdad:bad:ba55::de:12
-    config_options:
-      # We currently can not use public-key based authentication on Ubuntu 22.04,
-      # see: https://github.com/chef/bento/issues/1405
-      ssh.username: vagrant
-      ssh.password: vagrant
 
   - name: node1
-    box: generic/ubuntu2204
+    box: bento/ubuntu-26.04
     memory: 1024
     cpus: 2
     groups:
@@ -46,11 +36,6 @@ platforms:
     interfaces:
       - network_name: private_network
         ip: fdad:bad:ba55::de:21
-    config_options:
-      # We currently can not use public-key based authentication on Ubuntu 22.04,
-      # see: https://github.com/chef/bento/issues/1405
-      ssh.username: vagrant
-      ssh.password: vagrant
 provisioner:
   name: ansible
   env:

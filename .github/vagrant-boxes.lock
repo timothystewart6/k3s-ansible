@@ -1,4 +1,4 @@
 # box version architecture
-generic/debian12 4.3.12 amd64
-generic/rocky9 4.3.12 amd64
-generic/ubuntu2204 4.3.12 amd64
+bento/debian-13 202510.26.0 amd64
+bento/rockylinux-10.1 202512.01.0 amd64
+bento/ubuntu-26.04 202606.01.0 amd64
