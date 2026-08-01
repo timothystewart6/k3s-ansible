@@ -76,8 +76,7 @@ write_prewarm_vagrantfile() {
     if [[ "$box" == 'generic/ubuntu2204' ]]; then
       printf '%s\n' \
         '  config.ssh.username = "vagrant"' \
-        '  config.ssh.password = "vagrant"' \
-        '  config.ssh.insert_key = false'
+        '  config.ssh.password = "vagrant"'
     fi
     printf '%s\n' \
       '  config.vm.synced_folder ".", "/vagrant", disabled: true' \
@@ -85,8 +84,8 @@ write_prewarm_vagrantfile() {
       '  config.vm.boot_timeout = 600' \
       '  config.vm.provider "virtualbox" do |virtualbox|' \
       '    virtualbox.linked_clone = true' \
-      '    virtualbox.memory = 512' \
-      '    virtualbox.cpus = 1' \
+      '    virtualbox.memory = 1024' \
+      '    virtualbox.cpus = 2' \
       '  end' \
       'end'
   } > "$destination"

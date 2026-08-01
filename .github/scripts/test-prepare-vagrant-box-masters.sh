@@ -47,7 +47,12 @@ third_output="$fixture/third-output"
 "$script" > "$first_output"
 grep -Fq 'config.ssh.username = "vagrant"' "$MOCK_VAGRANTFILE_CAPTURE"
 grep -Fq 'config.ssh.password = "vagrant"' "$MOCK_VAGRANTFILE_CAPTURE"
-grep -Fq 'config.ssh.insert_key = false' "$MOCK_VAGRANTFILE_CAPTURE"
+if grep -Fq 'config.ssh.insert_key' "$MOCK_VAGRANTFILE_CAPTURE"; then
+  printf 'prewarm Vagrantfile unexpectedly overrides Vagrant SSH key insertion\n' >&2
+  exit 1
+fi
+grep -Fq 'virtualbox.memory = 1024' "$MOCK_VAGRANTFILE_CAPTURE"
+grep -Fq 'virtualbox.cpus = 2' "$MOCK_VAGRANTFILE_CAPTURE"
 grep -Fq 'config.vm.boot_timeout = 600' "$MOCK_VAGRANTFILE_CAPTURE"
 mapping_file="$mock_master_root/generic_ubuntu2204-4.3.12-amd64.uuid"
 test -s "$mapping_file"
