@@ -33,7 +33,7 @@
       ansible.builtin.command:
         argv: >-
           {{
-            [molecule_project_directory + '/.github/scripts/vagrant-up-timed.sh',
+            [playbook_dir + '/../../.github/scripts/vagrant-up-timed.sh',
              molecule_ephemeral_directory] + item
           }}
       loop: "{{ create_batches }}"
