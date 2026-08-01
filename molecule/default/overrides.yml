@@ -7,6 +7,9 @@
         # See:
         # https://github.com/flannel-io/flannel/blob/67d603aaf45ef80f5dd39f43714fc5e6f8a637eb/Documentation/troubleshooting.md#Vagrant
         flannel_iface: eth1
+        # kube-vip cannot infer the cluster interface in these multi-NIC
+        # Vagrant guests because the default route is on eth0.
+        kube_vip_iface: eth1
 
         # The test VMs might be a bit slow, so we give them more time to join the cluster:
         retry_count: 45

@@ -6,20 +6,26 @@
 - name: Network setup
   hosts: all
   tasks:
-    - name: Disable firewalld
-      when: ansible_distribution == "Rocky"
-      # Rocky Linux comes with firewalld enabled. It blocks some of the network
-      # connections needed for our k3s cluster. For our test setup, we just disable
-      # it since the VM host's firewall is still active for connections to and from
-      # the Internet.
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Disable guest firewall services
+      # The disposable test guests use an isolated VirtualBox network. A distro
+      # firewall can allow ICMP while silently blocking the inter-node Kubernetes
+      # API connection, so disable the known guest firewalls consistently.
       # When building your own cluster, please DO NOT blindly copy this. Instead,
       # please create a custom firewall configuration that fits your network design
       # and security needs.
       ansible.builtin.systemd:
-        name: firewalld
+        name: "{{ item }}"
         enabled: false
         state: stopped
       become: true
+      loop:
+        - firewalld.service
+        - nftables.service
+        - ufw.service
+      when: item in ansible_facts.services
 
     - name: Verify the private cluster interface
       ansible.builtin.assert:

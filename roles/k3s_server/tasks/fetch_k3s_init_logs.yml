@@ -62,6 +62,19 @@
   no_log: true
   register: k3s_tcp_listener_state
 
+- name: Fetch guest firewall service state
+  ansible.builtin.service_facts:
+  no_log: true
+  register: k3s_service_facts
+
+- name: Fetch input firewall rules
+  ansible.builtin.command:
+    cmd: iptables -S INPUT
+  changed_when: false
+  failed_when: false
+  no_log: true
+  register: k3s_input_firewall_rules
+
 - name: Ping the primary Kubernetes API address from {{ ansible_hostname }}
   ansible.builtin.command:
     argv:
@@ -134,6 +147,16 @@
 
       === ss -ltn ===
       {{ k3s_tcp_listener_state.stdout }}
+
+      === guest firewall services ===
+      firewalld={{ k3s_service_facts.ansible_facts.services.get('firewalld.service', {}).get('state', 'not-found') }}
+      nftables={{ k3s_service_facts.ansible_facts.services.get('nftables.service', {}).get('state', 'not-found') }}
+      ufw={{ k3s_service_facts.ansible_facts.services.get('ufw.service', {}).get('state', 'not-found') }}
+
+      === iptables -S INPUT ===
+      rc={{ k3s_input_firewall_rules.rc }}
+      {{ k3s_input_firewall_rules.stdout }}
+      {{ k3s_input_firewall_rules.stderr }}
 
       === primary API ping ===
       rc={{ k3s_primary_api_ping.rc }}

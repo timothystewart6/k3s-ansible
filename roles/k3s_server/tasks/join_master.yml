@@ -1,4 +1,14 @@
 ---
+- name: Verify primary Kubernetes API reachability from {{ joining_master }}
+  ansible.builtin.wait_for:
+    host: >-
+      {{ hostvars[groups[group_name_master | default('master')][0]].k3s_node_ip
+      | split(',') | first }}
+    port: 6443
+    connect_timeout: 2
+    timeout: 30
+  delegate_to: "{{ joining_master }}"
+
 - name: Join transient k3s-init service for {{ joining_master }}
   ansible.builtin.command:
     cmd: >-
