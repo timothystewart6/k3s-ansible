@@ -4,9 +4,7 @@ dependency:
 driver:
   name: vagrant
   # The Vagrant driver warns that parallel VirtualBox creation can cause
-  # platform issues. This five-node, mixed-distribution scenario is especially
-  # susceptible to stale host-only-network neighbor state when all guests are
-  # created concurrently.
+  # platform issues. Keep this five-node, mixed-distribution scenario serial.
   parallel: false
 platforms:
   - name: control1
@@ -19,6 +17,9 @@ platforms:
     interfaces:
       - network_name: private_network
         ip: 192.168.30.38
+        # Keep this cluster off the persistent vboxnet0 host-only switch. The
+        # NAT adapter remains available for SSH and Internet access.
+        virtualbox__intnet: k3s-ansible-default
     config_options:
       # We currently can not use public-key based authentication on Ubuntu 22.04,
       # see: https://github.com/chef/bento/issues/1405
@@ -35,6 +36,7 @@ platforms:
     interfaces:
       - network_name: private_network
         ip: 192.168.30.39
+        virtualbox__intnet: k3s-ansible-default
 
   - name: control3
     box: generic/rocky9
@@ -46,6 +48,7 @@ platforms:
     interfaces:
       - network_name: private_network
         ip: 192.168.30.40
+        virtualbox__intnet: k3s-ansible-default
 
   - name: node1
     box: generic/ubuntu2204
@@ -57,6 +60,7 @@ platforms:
     interfaces:
       - network_name: private_network
         ip: 192.168.30.41
+        virtualbox__intnet: k3s-ansible-default
     config_options:
       # We currently can not use public-key based authentication on Ubuntu 22.04,
       # see: https://github.com/chef/bento/issues/1405
@@ -73,6 +77,7 @@ platforms:
     interfaces:
       - network_name: private_network
         ip: 192.168.30.42
+        virtualbox__intnet: k3s-ansible-default
 
 provisioner:
   name: ansible
