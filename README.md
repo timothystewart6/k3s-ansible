@@ -91,6 +91,29 @@ ansible-playbook reset.yml -i inventory/my-cluster/hosts.ini
 
 >You should also reboot these nodes due to the VIP not being destroyed
 
+## 🔁 Upgrading an existing cluster
+
+These version variables select the components used for a **fresh** installation.
+They are not a supported direct in-place upgrade path for an existing cluster.
+K3s, Calico, and Cilium each require staged upgrades for long-lived clusters.
+
+- **K3s**: do not jump an embedded-etcd cluster straight to Kubernetes 1.36.
+  First run a K3s patch that contains etcd 3.5.26 (for example `v1.33.7+k3s3`
+  or newer in the 1.33 line), then advance one Kubernetes minor version at a
+  time. Upgrade servers one at a time before agents. See
+  [K3s manual upgrades](https://docs.k3s.io/upgrades/manual) and the
+  [v1.34 release notes](https://docs.k3s.io/release-notes/v1.34.X).
+- **Cilium**: upstream supports only consecutive minor upgrades. Update to the
+  latest patch of the current minor, then upgrade 1.17, 1.18, 1.19, and 1.20 in
+  order, reading each version's upgrade notes and running preflight checks.
+  Do not attempt a direct upgrade from an old Cilium to 1.20.
+- **Calico**: starting with 3.28 the v3 resource UID behavior changed. If you
+  have operators with OwnerReferences pointing to `projectcalico.org/v3`
+  resources, remove and recreate those references around an in-place upgrade.
+- **MetalLB**: this project installs application tag `v0.16.0`. A newer
+  chart-only tag such as `metallb-chart-0.16.1` is not an application or image
+  release and must not be used as the controller or speaker image tag.
+
 ## ⚙️ Kube Config
 
 To copy your `kube config` locally so that you can access your **Kubernetes** cluster run:
@@ -146,11 +169,11 @@ See the commands [here](https://technotim.com/posts/k3s-etcd-ansible/#testing-yo
 | `k3s_server` | `kube_vip_bgp_peers` | list | `[]` | Not required | List of BGP peer ASN & address pairs |
 | `k3s_server` | `kube_vip_bgp_peers_groups` | list | `['k3s_master']` | Not required | Inventory group in which to search for additional `kube_vip_bgp_peers` parameters to merge. |
 | `k3s_server` | `kube_vip_iface` | string | `~` | Not required | Explicitly define an interface that ALL control nodes should use to propagate the VIP, define it here. Otherwise, kube-vip will determine the right interface automatically at runtime. |
-| `k3s_server` | `kube_vip_tag_version` | string | `v0.7.2` | Not required | Image tag for kube-vip |
-| `k3s_server` | `kube_vip_cloud_provider_tag_version` | string | `main` | Not required | Tag for kube-vip-cloud-provider manifest when enable |
+| `k3s_server` | `kube_vip_tag_version` | string | `v1.2.2` | Not required | Image tag for kube-vip |
+| `k3s_server` | `kube_vip_cloud_provider_tag_version` | string | `v0.0.12` | Not required | Tag for kube-vip-cloud-provider manifest when enable |
 | `k3s_server`, `k3_server_post` | `kube_vip_lb_ip_range` | string | `~` | Not required | IP range for kube-vip load balancer |
-| `k3s_server`, `k3s_server_post` | `metal_lb_controller_tag_version` | string | `v0.14.3` | Not required | Image tag for MetalLB |
-| `k3s_server` | `metal_lb_speaker_tag_version` | string | `v0.14.3` | Not required | Image tag for MetalLB |
+| `k3s_server`, `k3s_server_post` | `metal_lb_controller_tag_version` | string | `v0.16.0` | Not required | Image tag for MetalLB |
+| `k3s_server` | `metal_lb_speaker_tag_version` | string | `v0.16.0` | Not required | Image tag for MetalLB |
 | `k3s_server` | `metal_lb_type` | string | `native` | Not required | Use FRR mode or native. Valid values are `frr` and `native` |
 | `k3s_server` | `retry_count` | int | `20` | Not required | Amount of retries when verifying that nodes joined |
 | `k3s_server` | `server_init_args` | string | ❌ | Not required | Arguments for server nodes |
@@ -162,7 +185,7 @@ See the commands [here](https://technotim.com/posts/k3s-etcd-ansible/#testing-yo
 | `k3s_server_post` | `calico_natOutgoing` | string | `Enabled` | Not required | IP pool NAT outgoing |
 | `k3s_server_post` | `calico_nodeSelector` | string | `all()` | Not required | IP pool node selector |
 | `k3s_server_post` | `calico_iface` | string | `~` | Not required | The network interface used for when Calico is enabled |
-| `k3s_server_post` | `calico_tag` | string | `v3.27.2` | Not required | Calico version tag |
+| `k3s_server_post` | `calico_tag` | string | `v3.32.1` | Not required | Calico version tag |
 | `k3s_server_post` | `cilium_bgp_my_asn` | int | `64513` | Not required | Local ASN for BGP peer |
 | `k3s_server_post` | `cilium_bgp_peer_asn` | int | `64512` | Not required | BGP peer ASN |
 | `k3s_server_post` | `cilium_bgp_peer_address` | string | `~` | Not required | BGP peer address |
@@ -171,14 +194,15 @@ See the commands [here](https://technotim.com/posts/k3s-etcd-ansible/#testing-yo
 | `k3s_server_post` | `cilium_bgp_lb_cidr` | string | `192.168.31.0/24` | Not required | BGP load balancer IP range |
 | `k3s_server_post` | `cilium_exportPodCIDR` | bool | `true` | Not required | Export pod CIDR |
 | `k3s_server_post` | `cilium_hubble` | bool | `true` | Not required | Enable Cilium Hubble |
-| `k3s_server_post` | `cilium_hubble` | bool | `true` | Not required | Enable Cilium Hubble |
 | `k3s_server_post` | `cilium_mode` | string | `native` | Not required | Inner-node communication mode (choices are `native` and `routed`) |
+| `k3s_server_post` | `cilium_tag` | string | `v1.20.0` | Not required | Cilium version tag |
+| `k3s_server_post` | `cilium_cli_tag` | string | `v0.19.7` | Not required | Cilium CLI version tag |
 | `k3s_server_post` | `cluster_cidr` | string | `10.52.0.0/16` | Not required | Inner-cluster IP range |
 | `k3s_server_post` | `enable_bpf_masquerade` | bool | `true` | Not required | Use IP masquerading |
 | `k3s_server_post` | `kube_proxy_replacement` | bool | `true` | Not required | Replace the native kube-proxy with Cilium |
 | `k3s_server_post` | `metal_lb_available_timeout` | string | `240s` | Not required | Wait for MetalLB resources |
 | `k3s_server_post` | `metal_lb_ip_range` | string | `192.168.30.80-192.168.30.90` | Not required | MetalLB ip range for load balancer |
-| `k3s_server_post` | `metal_lb_controller_tag_version` | string | `v0.14.3` | Not required | Image tag for MetalLB |
+| `k3s_server_post` | `metal_lb_controller_tag_version` | string | `v0.16.0` | Not required | Image tag for MetalLB |
 | `k3s_server_post` | `metal_lb_mode` | string | `layer2` | Not required | Metallb mode (choices are `bgp` and `layer2`) |
 | `k3s_server_post` | `metal_lb_bgp_my_asn` | string | `~` | Not required | BGP ASN configurations |
 | `k3s_server_post` | `metal_lb_bgp_peer_asn` | string | `~` | Not required | BGP peer ASN configurations |
