@@ -86,7 +86,7 @@
         - name: Get Calico TigeraStatus for calico and apiserver
           kubernetes.core.k8s_info:
             api_version: operator.tigera.io/v1
-            kind: Tigerastatus
+            kind: TigeraStatus
             name: "{{ item }}"
             kubeconfig: "{{ kubecfg_path }}"
           register: calico_tigerastatus

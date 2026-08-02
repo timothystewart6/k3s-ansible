@@ -44,31 +44,45 @@
         port_: >-
           {{ nginx_services.resources[0].spec.ports[0].port }}
 
-    - name: Assert that the load balancer address is within the configured pool
+    - name: Initialize load balancer address range check
+      ansible.builtin.set_fact:
+        lb_addr_in_range: false
+        lb_ip_value: >-
+          {{ nginx_services.resources[0].status.loadBalancer.ingress[0].ip }}
+
+    - name: Check load balancer address against start-end pools
+      ansible.builtin.set_fact:
+        lb_addr_in_range: true
+      loop: "{{ verify_lb_ip_range }}"
+      loop_control:
+        label: "{{ item }}"
+      when:
+        - "'-' in item"
+        - "'/' not in item"
+        - >-
+          (lb_ip_value | ansible.utils.ipaddr('int') | int) >=
+          (item.split('-')[0] | ansible.utils.ipaddr('int') | int)
+        - >-
+          (lb_ip_value | ansible.utils.ipaddr('int') | int) <=
+          (item.split('-')[1] | ansible.utils.ipaddr('int') | int)
+
+    - name: Check load balancer address against CIDR pools
+      ansible.builtin.set_fact:
+        lb_addr_in_range: true
+      loop: "{{ verify_lb_ip_range }}"
+      loop_control:
+        label: "{{ item }}"
+      when:
+        - "'/' in item"
+        - (lb_ip_value | ansible.utils.ipaddr(item)) is string
+
+    - name: Assert that the load balancer address is within a configured pool
       ansible.builtin.assert:
         that: lb_addr_in_range
-        success_msg: "LoadBalancer address {{ ip_value }} is in the configured range"
+        success_msg: "LoadBalancer address {{ lb_ip_value }} is in a configured range"
         fail_msg: >-
-          LoadBalancer address {{ ip_value }} is not in the configured
+          LoadBalancer address {{ lb_ip_value }} is not in a configured
           range {{ verify_lb_ip_range }}
-      vars:
-        ip_value: >-
-          {{ nginx_services.resources[0].status.loadBalancer.ingress[0].ip }}
-        lb_first: "{{ verify_lb_ip_range[0] | default('') }}"
-        lb_is_range: "{{ '-' in lb_first and '/' not in lb_first }}"
-        lb_start: "{{ lb_first.split('-')[0] | default(ip_value) }}"
-        lb_end: "{{ lb_first.split('-')[1] | default(ip_value) }}"
-        # Strict membership is checked only when the first range entry is a
-        # start-end pair. CIDR entries (used by the ipv6 scenario) fall back to
-        # the reachability probe above.
-        lb_addr_in_range: >-
-          {{
-            (verify_lb_ip_range | length > 0) and
-            ((not lb_is_range) or (
-              (ip_value | ansible.utils.ipaddr('int') >= lb_start | ansible.utils.ipaddr('int')) and
-              (ip_value | ansible.utils.ipaddr('int') <= lb_end | ansible.utils.ipaddr('int'))
-            ))
-          }}
   # Deactivated linter rules:
   #   - jinja[invalid]: As of version 6.6.0, ansible-lint complains that the input to ipwrap
   #                     would be undefined. This will not be the case during playbook execution.

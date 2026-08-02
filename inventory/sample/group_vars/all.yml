@@ -18,7 +18,7 @@ calico_tag: v3.32.1 # calico version tag
 # uncomment cilium_iface to use cilium cni instead of flannel or calico
 # ensure v4.19.57, v5.1.16, v5.2.0 or more recent kernel
 # cilium_iface: "eth0"
-cilium_mode: native # native when nodes on same subnet or using bgp, else set routed
+cilium_mode: native # native when nodes are on the same subnet or use BGP, otherwise set tunnel
 cilium_tag: v1.20.0 # cilium version tag
 cilium_cli_tag: v0.19.7 # cilium cli version tag
 cilium_hubble: true # enable hubble observability relay and ui

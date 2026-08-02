@@ -197,7 +197,7 @@ See the commands [here](https://technotim.com/posts/k3s-etcd-ansible/#testing-yo
 | `k3s_server_post` | `cilium_bgp_lb_cidr` | string | `192.168.31.0/24` | Not required | BGP load balancer IP range |
 | `k3s_server_post` | `cilium_exportPodCIDR` | bool | `true` | Not required | Export pod CIDR |
 | `k3s_server_post` | `cilium_hubble` | bool | `true` | Not required | Enable Cilium Hubble |
-| `k3s_server_post` | `cilium_mode` | string | `native` | Not required | Inner-node communication mode (choices are `native` and `routed`) |
+| `k3s_server_post` | `cilium_mode` | string | `native` | Not required | Inner-node communication mode (choices are `native` and `tunnel`; `routed` is a deprecated alias for `tunnel`) |
 | `k3s_server_post` | `cilium_tag` | string | `v1.20.0` | Not required | Cilium version tag |
 | `k3s_server_post` | `cilium_cli_tag` | string | `v0.19.7` | Not required | Cilium CLI version tag |
 | `k3s_server_post` | `cluster_cidr` | string | `10.52.0.0/16` | Not required | Inner-cluster IP range |
