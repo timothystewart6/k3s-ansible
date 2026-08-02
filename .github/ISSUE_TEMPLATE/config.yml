@@ -1,0 +1,9 @@
+---
+blank_issues_enabled: false
+contact_links:
+  - name: Troubleshooting and support
+    url: https://github.com/timothystewart6/k3s-ansible/discussions/20
+    about: Review common troubleshooting guidance and ask configuration or usage questions.
+  - name: General discussions
+    url: https://github.com/timothystewart6/k3s-ansible/discussions
+    about: Discuss ideas and questions that are not confirmed bugs or concrete feature requests.

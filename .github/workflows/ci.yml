@@ -14,6 +14,7 @@ on:
       - '**/FUNDING.yml'
       - '**/host.ini'
       - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
       - '**/.editorconfig'
       - '**/ansible.example.cfg'
       - '**/deploy.sh'

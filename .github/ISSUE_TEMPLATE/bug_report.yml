@@ -1,0 +1,102 @@
+---
+name: Bug report
+description: Report a reproducible problem with the playbooks, roles, or generated resources.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Search existing issues and review the troubleshooting link first.
+        Remove credentials, tokens, public IP addresses, and private hostnames from all fields and logs.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I searched existing issues and discussions for this problem.
+          required: true
+        - label: I reviewed the troubleshooting guidance linked from the issue chooser.
+          required: true
+        - label: I removed secrets and identifying infrastructure details from this report.
+          required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Problem summary
+      description: Describe what failed and its impact.
+      placeholder: A concise description of the problem and affected nodes or components.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest reliable sequence that reproduces the issue.
+      placeholder: |
+        1. Configure ...
+        2. Run ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: input
+    id: revision
+    attributes:
+      label: Repository revision
+      description: Release, tag, branch, or commit SHA used.
+      placeholder: v1.36.2+k3s1+tt1 or a commit SHA
+    validations:
+      required: true
+
+  - type: input
+    id: ansible-version
+    attributes:
+      label: Ansible version
+      description: Output of `ansible --version`, shortened to version and Python details.
+      placeholder: ansible-core 2.18.0, Python 3.12
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include target OS and version, architecture, node counts, platform, and network provider.
+      placeholder: Debian 13, amd64, 3 control nodes and 2 agents, bare metal, Cilium
+    validations:
+      required: true
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Relevant sanitized configuration
+      description: Include only variables and inventory groups needed to reproduce the problem.
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or task output
+      description: Include the failing task and surrounding output. Redact sensitive or identifying values.
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add attempted fixes, suspected causes, regressions, or other useful context.

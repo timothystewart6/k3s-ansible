@@ -1,0 +1,55 @@
+---
+name: Feature request
+description: Propose a focused improvement to supported repository behavior.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the use case before proposing an implementation. Search existing issues and discussions first.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      options:
+        - label: I searched existing issues and discussions for this request.
+          required: true
+        - label: This request is about reusable project behavior, not support for one private environment.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What limitation exists, who encounters it, and why does it matter?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the desired user-visible result. Include example variables or commands when useful.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe workarounds or other designs and their tradeoffs.
+
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and operational impact
+      description: Note affected operating systems, architectures, CNIs, existing clusters, or reset behavior.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add relevant upstream documentation, examples, or prior discussion.

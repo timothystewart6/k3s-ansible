@@ -2,51 +2,66 @@
 
 ![Fully Automated K3S etcd High Availability Install](https://img.youtube.com/vi/CbkEWcUZ7zM/0.jpg)
 
-This playbook will build an HA Kubernetes cluster with `k3s`, `kube-vip` and MetalLB via `ansible`.
+This Ansible collection builds a highly available Kubernetes cluster with k3s. It supports kube-vip for the control
+plane virtual IP, multiple CNI options, and either MetalLB or kube-vip for service load balancing.
 
 This is based on the work from [this fork](https://github.com/212850a/k3s-ansible) which is based on the work from [k3s-io/k3s-ansible](https://github.com/k3s-io/k3s-ansible). It uses [kube-vip](https://kube-vip.io/) to create a load balancer for control plane, and [metal-lb](https://metallb.universe.tf/installation/) for its service `LoadBalancer`.
 
-If you want more context on how this works, see:
+For more context on how it works, see:
 
 📄 [Documentation](https://technotim.com/posts/k3s-etcd-ansible/) (including example commands)
 
 📺 [Watch the Video](https://www.youtube.com/watch?v=CbkEWcUZ7zM)
 
+## Project guides
+
+- [Getting started](#-getting-started)
+- [Configuration variables](#variables)
+- [Upgrading an existing cluster](#-upgrading-an-existing-cluster)
+- [Local Molecule testing](molecule/README.md)
+- [Contributing guidelines](CONTRIBUTING.md)
+- [Repository guide for coding agents](AGENTS.md)
+
 ## 📖 k3s Ansible Playbook
 
-Build a Kubernetes cluster using Ansible with k3s. The goal is easily install a HA Kubernetes cluster on machines running:
+Build a Kubernetes cluster using Ansible and k3s. The goal is to make a highly available cluster straightforward to
+install on machines running:
 
 - [x] Debian (tested on version 13)
 - [x] Ubuntu (tested on version 26.04 LTS)
 - [x] Rocky (tested on version 10)
 
-on processor architecture:
+Supported processor architectures are:
 
-- [X] x64
-- [X] arm64
-- [X] armhf
+- [x] x64
+- [x] arm64
+- [x] armhf
 
 ## ✅ System requirements
 
-- Control Node (the machine you are running `ansible` commands) must have Ansible 2.11+ If you need a quick primer on Ansible [you can check out my docs and setting up Ansible](https://technotim.com/posts/ansible-automation/).
+- The control node, which runs the Ansible commands, must have Ansible 2.11 or newer. For a quick primer, see
+  [setting up Ansible](https://technotim.com/posts/ansible-automation/).
 
-- You will also need to install collections that this playbook uses by running `ansible-galaxy collection install -r ./collections/requirements.yml` (important❗)
+- Install the required collections with
+  `ansible-galaxy collection install -r ./collections/requirements.yml`.
 
 - [`netaddr` package](https://pypi.org/project/netaddr/) must be available to Ansible. If you have installed Ansible via apt, this is already taken care of. If you have installed Ansible via `pip`, make sure to install `netaddr` into the respective virtual environment.
 
-- `server` and `agent` nodes should have passwordless SSH access, if not you can supply arguments to provide credentials `--ask-pass --ask-become-pass` to each command.
+- Server and agent nodes should support passwordless SSH access. Otherwise, pass `--ask-pass --ask-become-pass` to
+  each playbook command.
 
 ## 🚀 Getting Started
 
 ### 🍴 Preparation
 
-First create a new directory based on the `sample` directory within the `inventory` directory:
+Create a cluster-specific inventory from the sample. The `inventory/` directory ignores custom inventory content so
+credentials and environment details aren't committed accidentally.
 
 ```bash
 cp -R inventory/sample inventory/my-cluster
 ```
 
-Second, edit `inventory/my-cluster/hosts.ini` to match the system information gathered above
+Edit `inventory/my-cluster/hosts.ini` to match the target hosts.
 
 For example:
 
@@ -67,9 +82,10 @@ node
 
 If multiple hosts are in the master group, the playbook will automatically set up k3s in [HA mode with etcd](https://rancher.com/docs/k3s/latest/en/installation/ha-embedded/).
 
-Finally, copy `ansible.example.cfg` to `ansible.cfg` and adapt the inventory path to match the files that you just created.
+Copy `ansible.example.cfg` to `ansible.cfg`, then update its inventory path. The local `ansible.cfg` file is ignored by
+Git.
 
-This requires at least k3s version `1.19.1` however the version is configurable by using the `k3s_version` variable.
+The minimum k3s version is `1.19.1`. Select the desired version with the `k3s_version` variable.
 
 If needed, you can also edit `inventory/my-cluster/group_vars/all.yml` to match your environment.
 
@@ -81,7 +97,8 @@ Start provisioning of the cluster using the following command:
 ansible-playbook site.yml -i inventory/my-cluster/hosts.ini
 ```
 
-After deployment control plane will be accessible via virtual ip-address which is defined in inventory/group_vars/all.yml as `apiserver_endpoint`
+After deployment, the control plane is accessible through the virtual IP defined by `apiserver_endpoint` in the
+inventory variables.
 
 ### 🔥 Remove k3s cluster
 
@@ -89,7 +106,7 @@ After deployment control plane will be accessible via virtual ip-address which i
 ansible-playbook reset.yml -i inventory/my-cluster/hosts.ini
 ```
 
->You should also reboot these nodes due to the VIP not being destroyed
+> Reboot the nodes after reset because the virtual IP may remain configured.
 
 ## 🔁 Upgrading an existing cluster
 
@@ -124,13 +141,21 @@ To copy your `kube config` locally so that you can access your **Kubernetes** cl
 ```bash
 scp debian@master_ip:/etc/rancher/k3s/k3s.yaml ~/.kube/config
 ```
-If you get file Permission denied, go into the node and temporarly run:
+If the copy fails with a permission error, grant the SSH user temporary read access using the least permissive method
+available for the target system. Restore the original ownership and permissions immediately after copying. Avoid
+world-writable permissions on the kubeconfig because it contains cluster credentials.
+
+For example, copy the file to a temporary user-readable path from the control node:
+
 ```bash
-sudo chmod 777 /etc/rancher/k3s/k3s.yaml
+ssh debian@master_ip 'sudo install -o "$(id -un)" -m 0600 /etc/rancher/k3s/k3s.yaml /tmp/k3s.yaml'
 ```
-Then copy with the scp command and reset the permissions back to:
+
+Copy `/tmp/k3s.yaml`, then remove the temporary remote copy:
+
 ```bash
-sudo chmod 600 /etc/rancher/k3s/k3s.yaml
+scp debian@master_ip:/tmp/k3s.yaml ~/.kube/config
+ssh debian@master_ip rm -f /tmp/k3s.yaml
 ```
 
 You'll then want to modify the config to point to master IP by running:
@@ -150,7 +175,7 @@ See the commands [here](https://technotim.com/posts/k3s-etcd-ansible/#testing-yo
 | `download` | `k3s_version` | string | ❌ | Required | K3s binaries version |
 | `k3s_agent`, `k3s_server`, `k3s_server_post` | `apiserver_endpoint` | string | ❌ | Required | Virtual ip-address configured on each master |
 | `k3s_agent` | `extra_agent_args` | string | `null` | Not required | Extra arguments for agents nodes |
-| `k3s_agent`, `k3s_server` | `group_name_master` | string | `null` | Not required | Name othe master group |
+| `k3s_agent`, `k3s_server` | `group_name_master` | string | `null` | Not required | Name of the master group |
 | `k3s_agent` | `k3s_token` | string | `null` | Not required | Token used to communicate between masters |
 | `k3s_agent`, `k3s_server` | `proxy_env` | dict | `null` | Not required | Internet proxy configurations |
 | `k3s_agent`, `k3s_server` | `proxy_env.HTTP_PROXY` | string | ❌ | Required | HTTP internet proxy |
@@ -227,9 +252,11 @@ It is run automatically in CI, but you can also run the tests locally.
 This might be helpful for quick feedback in a few cases.
 You can find more information about it [here](molecule/README.md).
 
-### Pre-commit Hooks
+### Pre-commit hooks
 
-This repo uses `pre-commit` and `pre-commit-hooks` to lint and fix common style and syntax errors.  Be sure to install python packages and then run `pre-commit install`.  For more information, see [pre-commit](https://pre-commit.com/)
+This repository uses `pre-commit` to check style, syntax, Ansible content, and shell scripts. Install the Python
+dependencies, run `pre-commit install` once, and run `pre-commit run --all-files` before submitting a change. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the complete development workflow.
 
 ## 🌌 Ansible Galaxy
 
