@@ -47,7 +47,9 @@ kube_vip_bgp_as: "64513"  # Defines the AS for the BGP server
 kube_vip_bgp_peeraddress: "192.168.30.1"  # Defines the address for the BGP peer
 kube_vip_bgp_peeras: "64512"  # Defines the AS for the BGP peer
 
-# apiserver_endpoint is virtual ip-address which will be configured on each master
+# apiserver_endpoint is virtual ip-address which will be configured on each master.
+# This must be a free, routable IP on your network (not already assigned to a host
+# or service), and is used by kube-vip / MetalLB to expose the Kubernetes API.
 apiserver_endpoint: 192.168.30.222
 
 # k3s_token is required  masters can talk together securely
