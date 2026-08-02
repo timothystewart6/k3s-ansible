@@ -93,10 +93,14 @@ argument_specs:
         default: ~
 
       cilium_mode:
-        description: Inner-node communication mode
+        description:
+          - Inner-node communication mode.
+          - Cilium accepts `native` or `tunnel`. `routed` is accepted as a
+            legacy alias and is mapped to `tunnel` at install time.
         default: native
         choices:
           - native
+          - tunnel
           - routed
 
       cilium_tag:

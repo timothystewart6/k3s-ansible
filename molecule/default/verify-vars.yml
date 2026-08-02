@@ -1,0 +1,9 @@
+---
+# Durable verify inputs for the default (flannel + MetalLB) scenario.
+# These are plain inventory vars linked into the shared Molecule inventory so
+# the verify play can see them even though the converge play's set_fact values
+# are not persisted between the two Ansible processes.
+verify_cni: flannel
+verify_lb: metallb
+verify_lb_ip_range:
+  - 192.168.30.80-192.168.30.90

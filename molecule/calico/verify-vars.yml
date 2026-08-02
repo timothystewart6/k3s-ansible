@@ -1,0 +1,6 @@
+---
+# Durable verify inputs for the calico (Calico CNI + MetalLB) scenario.
+verify_cni: calico
+verify_lb: metallb
+verify_lb_ip_range:
+  - 192.168.30.100-192.168.30.109

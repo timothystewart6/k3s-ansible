@@ -1,0 +1,7 @@
+---
+# Durable verify inputs for the ipv6 (flannel CNI + MetalLB) scenario.
+verify_cni: flannel
+verify_lb: metallb
+verify_lb_ip_range:
+  - fdad:bad:ba55::1b:0/112
+  - 192.168.123.80-192.168.123.90

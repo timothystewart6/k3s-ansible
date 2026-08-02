@@ -37,7 +37,7 @@
         'created' in apply_crds.stdout or
         'configured' in apply_crds.stdout or
         'applied' in apply_crds.stdout
-      failed_when: "'Error' in apply_crds.stderr"
+      failed_when: apply_crds.rc != 0
 
     - name: Apply Tigera Operator manifest idempotently with server-side apply
       ansible.builtin.command: >-
@@ -49,11 +49,12 @@
         'created' in apply_operator.stdout or
         'configured' in apply_operator.stdout or
         'applied' in apply_operator.stdout
-      failed_when: "'Error' in apply_operator.stderr"
+      failed_when: apply_operator.rc != 0
 
     - name: Wait for Tigera Operator and managed CRDs to become available
       ansible.builtin.command: >-
         {{ k3s_kubectl_binary | default('k3s kubectl') }} wait {{ item.type }}/{{ item.name }}
+        {% if item.namespace is defined %}--namespace='{{ item.namespace }}'{% endif %}
         --for=condition={{ item.condition }}
         --timeout=30s
       register: tigera_result
@@ -62,7 +63,7 @@
       retries: 7
       delay: 7
       with_items:
-        - { name: tigera-operator, type: deployment, condition: Available=True }
+        - { name: tigera-operator, type: deployment, namespace: tigera-operator, condition: Available=True }
         - { name: installations.operator.tigera.io, type: crd, condition: Established }
         - { name: apiservers.operator.tigera.io, type: crd, condition: Established }
       loop_control:
@@ -85,7 +86,7 @@
         'configured' in apply_cr.stdout or
         'created' in apply_cr.stdout or
         'unchanged' in apply_cr.stdout
-      failed_when: "'Error' in apply_cr.stderr"
+      failed_when: apply_cr.rc != 0
 
     - name: Wait for Calico system resources to be available
       ansible.builtin.command: >-

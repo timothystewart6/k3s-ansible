@@ -1,7 +1,9 @@
 ---
 # Scenario-aware verification of cluster components and their live image tags.
-# Branches on the active CNI (flannel / calico / cilium) and load balancer
-# (MetalLB / kube-vip) using the same variable names the install roles use.
+# Scenario identity (verify_cni / verify_lb) and expected address range come
+# from each scenario's verify-vars.yml, which is plain inventory data available
+# to the verify play. Converge-time set_fact values are not persisted between
+# the two Ansible processes, so they are never used here.
 - name: Verify cluster components report expected versions
   block:
     - name: Get all nodes with their kubelet versions
@@ -23,7 +25,7 @@
         label: "{{ item.metadata.name }}"
 
     - name: Verify Flannel is the active CNI
-      when: cilium_iface is not defined and calico_iface is not defined
+      when: verify_cni == 'flannel'
       block:
         - name: Get the Flannel DaemonSet
           kubernetes.core.k8s_info:
@@ -42,8 +44,24 @@
             success_msg: "Flannel DaemonSet is Ready"
             fail_msg: "Flannel DaemonSet is not fully Ready"
 
+    - name: Verify there is no incompatible CNI with Flannel
+      when: verify_cni == 'flannel'
+      block:
+        - name: Get any Calico namespaces with Flannel enabled
+          kubernetes.core.k8s_info:
+            kind: Namespace
+            name: calico-system
+            kubeconfig: "{{ kubecfg_path }}"
+          register: calico_absent
+
+        - name: Assert there is no Calico system namespace
+          ansible.builtin.assert:
+            that: calico_absent.resources | length == 0
+            success_msg: "No Calico present with Flannel"
+            fail_msg: "A Calico namespace exists alongside Flannel"
+
     - name: Verify Calico is the active CNI
-      when: calico_iface is defined
+      when: verify_cni == 'calico'
       block:
         - name: Get the Calico node DaemonSet image
           kubernetes.core.k8s_info:
@@ -97,6 +115,7 @@
             namespace: kube-flannel
             kubeconfig: "{{ kubecfg_path }}"
           register: no_flannel_ds
+
         - name: Assert there are no Flannel DaemonSets
           ansible.builtin.assert:
             that: no_flannel_ds.resources | length == 0
@@ -104,7 +123,7 @@
             fail_msg: "A Flannel DaemonSet exists alongside Calico"
 
     - name: Verify Cilium is the active CNI
-      when: cilium_iface is defined
+      when: verify_cni == 'cilium'
       block:
         - name: Get the Cilium agent and operator images
           kubernetes.core.k8s_info:
@@ -179,6 +198,7 @@
             namespace: kube-flannel
             kubeconfig: "{{ kubecfg_path }}"
           register: no_flannel_ds_cilium
+
         - name: Assert there are no Flannel DaemonSets
           ansible.builtin.assert:
             that: no_flannel_ds_cilium.resources | length == 0
@@ -186,7 +206,7 @@
             fail_msg: "A Flannel DaemonSet exists alongside Cilium"
 
     - name: Verify MetalLB is the active load balancer
-      when: kube_vip_lb_ip_range is not defined
+      when: verify_lb == 'metallb'
       block:
         - name: Get the MetalLB controller and speaker images
           kubernetes.core.k8s_info:
@@ -231,7 +251,7 @@
                   | list)[0].spec.template.spec.containers[0].image }}
 
     - name: Verify kube-vip is the active load balancer
-      when: kube_vip_lb_ip_range is defined
+      when: verify_lb == 'kube-vip'
       block:
         - name: Get the kube-vip and cloud provider images
           kubernetes.core.k8s_info:
@@ -250,10 +270,10 @@
           ansible.builtin.assert:
             that:
               - kubevip_image | regex_search(':' ~ kube_vip_tag_version)
-              - cloud_provider_image | regex_search(kube_vip_cloud_provider_tag_version)
+              - cloud_provider_image | regex_search(verify_kube_vip_cloud_provider_tag)
             success_msg: >-
               kube-vip {{ kube_vip_tag_version }},
-              cloud provider {{ kube_vip_cloud_provider_tag_version }}
+              cloud provider {{ verify_kube_vip_cloud_provider_tag }}
             fail_msg: >-
               kube-vip {{ kubevip_image }},
               cloud provider {{ cloud_provider_image }}
@@ -281,6 +301,7 @@
             name: metallb-system
             kubeconfig: "{{ kubecfg_path }}"
           register: metallb_absent
+
         - name: Assert the MetalLB namespace does not exist
           ansible.builtin.assert:
             that: metallb_absent.resources | length == 0

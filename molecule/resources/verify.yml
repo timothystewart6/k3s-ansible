@@ -1,5 +1,8 @@
 ---
 - name: Verify
   hosts: all
+  vars_files:
+    - >-
+      {{ lookup("ansible.builtin.env", "MOLECULE_SCENARIO_DIRECTORY") }}/verify-vars.yml
   roles:
     - verify_from_outside

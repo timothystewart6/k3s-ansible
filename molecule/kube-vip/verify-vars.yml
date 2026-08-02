@@ -1,0 +1,9 @@
+---
+# Durable verify inputs for the kube-vip (flannel CNI + kube-vip LB) scenario.
+verify_cni: flannel
+verify_lb: kube-vip
+# The kube-vip cloud provider tag is not defined in the linked sample group
+# vars (its sample entry is commented out), so it is supplied here.
+verify_kube_vip_cloud_provider_tag: v0.0.12
+verify_lb_ip_range:
+  - 192.168.30.110-192.168.30.119

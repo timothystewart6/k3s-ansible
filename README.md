@@ -98,9 +98,12 @@ They are not a supported direct in-place upgrade path for an existing cluster.
 K3s, Calico, and Cilium each require staged upgrades for long-lived clusters.
 
 - **K3s**: do not jump an embedded-etcd cluster straight to Kubernetes 1.36.
-  First run a K3s patch that contains etcd 3.5.26 (for example `v1.33.7+k3s3`
-  or newer in the 1.33 line), then advance one Kubernetes minor version at a
-  time. Upgrade servers one at a time before agents. See
+  Upgrade one Kubernetes minor version at a time. From the sample default
+  (`v1.30.2+k3s2`) the sequence is: the latest supported 1.30 patch, then 1.31,
+  1.32, a 1.33 patch that contains etcd 3.5.26 (for example `v1.33.7+k3s3`),
+  then 1.34, 1.35, and finally 1.36. Upgrade servers one at a time before
+  agents. Take backups and confirm cluster health at each step; this playbook
+  does not automate the upgrade, so those remain manual operational steps. See
   [K3s manual upgrades](https://docs.k3s.io/upgrades/manual) and the
   [v1.34 release notes](https://docs.k3s.io/release-notes/v1.34.X).
 - **Cilium**: upstream supports only consecutive minor upgrades. Update to the

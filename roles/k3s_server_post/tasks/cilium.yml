@@ -143,6 +143,13 @@
               Target Cilium version: {{ cilium_tag }},
               Update needed: {{ cilium_needs_update }}
 
+    - name: Map the legacy routed mode to Cilium tunnel mode
+      ansible.builtin.set_fact:
+        # Cilium 1.20 accepts `native` or `tunnel`. `routed` was the name used
+        # by older releases and is kept only as a backward-compatible alias.
+        cilium_routing_mode: >-
+          {{ 'tunnel' if cilium_mode == 'routed' else cilium_mode }}
+
     - name: Install Cilium
       ansible.builtin.command: >-
         {% if cilium_installed.rc != 0 %}
@@ -154,13 +161,13 @@
         --helm-set operator.replicas="1"
         {{ '--helm-set devices=' + cilium_iface if cilium_iface != 'auto' else '' }}
         --helm-set ipam.operator.clusterPoolIPv4PodCIDRList={{ cluster_cidr }}
-        {% if cilium_mode == "native" or (cilium_bgp and cilium_exportPodCIDR != 'false') %}
+        {% if cilium_routing_mode == "native" or (cilium_bgp and cilium_exportPodCIDR != 'false') %}
         --helm-set ipv4NativeRoutingCIDR={{ cluster_cidr }}
         {% endif %}
         --helm-set k8sServiceHost="127.0.0.1"
         --helm-set k8sServicePort="6444"
-        --helm-set routingMode={{ cilium_mode }}
-        --helm-set autoDirectNodeRoutes={{ "true" if cilium_mode == "native" else "false" }}
+        --helm-set routingMode={{ cilium_routing_mode }}
+        --helm-set autoDirectNodeRoutes={{ "true" if cilium_routing_mode == "native" else "false" }}
         --helm-set kubeProxyReplacement={{ kube_proxy_replacement }}
         --helm-set bpf.masquerade={{ enable_bpf_masquerade }}
         --helm-set bgpControlPlane.enabled={{ cilium_bgp | default("false") }}
@@ -236,7 +243,7 @@
             apply --dry-run=server -f /tmp/k3s/cilium-bgp.yaml
           register: preflight_cr
           changed_when: false
-          failed_when: "'error' in preflight_cr.stderr | lower"
+          failed_when: preflight_cr.rc != 0
 
         - name: Apply BGP manifests
           ansible.builtin.command: >-
@@ -244,7 +251,7 @@
             apply -f /tmp/k3s/cilium-bgp.yaml
           register: apply_cr
           changed_when: "'configured' in apply_cr.stdout or 'created' in apply_cr.stdout"
-          failed_when: "'is invalid' in apply_cr.stderr"
+          failed_when: apply_cr.rc != 0
 
         - name: Remove deprecated CiliumBGPPeeringPolicy after v2 resources are accepted
           ansible.builtin.command: >-
@@ -252,8 +259,9 @@
             delete CiliumBGPPeeringPolicy.cilium.io 01-bgp-peering-policy
           register: delete_old_policy
           changed_when: "'deleted' in delete_old_policy.stdout"
+          # The policy (and possibly its CRD) may already be absent; this is
+          # intentionally tolerated, not a command whose failure must be hidden.
           failed_when: false
-          ignore_errors: true
 
         - name: Test for BGP config resources
           ansible.builtin.command: "{{ item }}"

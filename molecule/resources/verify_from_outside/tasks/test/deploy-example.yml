@@ -50,20 +50,24 @@
         success_msg: "LoadBalancer address {{ ip_value }} is in the configured range"
         fail_msg: >-
           LoadBalancer address {{ ip_value }} is not in the configured
-          range {{ lb_range }}
+          range {{ verify_lb_ip_range }}
       vars:
         ip_value: >-
           {{ nginx_services.resources[0].status.loadBalancer.ingress[0].ip }}
-        lb_range: >-
-          {{ kube_vip_lb_ip_range | default(metal_lb_ip_range, true) }}
-        lb_int: "{{ ip_value | ansible.utils.ipaddr('int') }}"
-        start_int: "{{ lb_range.split('-')[0] | ansible.utils.ipaddr('int') }}"
-        end_int: "{{ lb_range.split('-')[1] | ansible.utils.ipaddr('int') }}"
+        lb_first: "{{ verify_lb_ip_range[0] | default('') }}"
+        lb_is_range: "{{ '-' in lb_first and '/' not in lb_first }}"
+        lb_start: "{{ lb_first.split('-')[0] | default(ip_value) }}"
+        lb_end: "{{ lb_first.split('-')[1] | default(ip_value) }}"
+        # Strict membership is checked only when the first range entry is a
+        # start-end pair. CIDR entries (used by the ipv6 scenario) fall back to
+        # the reachability probe above.
         lb_addr_in_range: >-
           {{
-            (lb_range.split('-') | length == 2) and
-            (lb_int >= start_int) and
-            (lb_int <= end_int)
+            (verify_lb_ip_range | length > 0) and
+            ((not lb_is_range) or (
+              (ip_value | ansible.utils.ipaddr('int') >= lb_start | ansible.utils.ipaddr('int')) and
+              (ip_value | ansible.utils.ipaddr('int') <= lb_end | ansible.utils.ipaddr('int'))
+            ))
           }}
   # Deactivated linter rules:
   #   - jinja[invalid]: As of version 6.6.0, ansible-lint complains that the input to ipwrap
