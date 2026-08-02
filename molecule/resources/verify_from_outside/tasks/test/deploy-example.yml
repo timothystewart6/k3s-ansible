@@ -32,23 +32,52 @@
         metallb_port: spec.ports[0].port
       register: nginx_services
 
+    - name: Wait for the load balancer address to be assigned
+      ansible.builtin.set_fact:
+        nginx_lb_ip: >-
+          {{
+            nginx_services.resources[0].status.loadBalancer.ingress[0].ip
+            if (nginx_services.resources | length > 0) and
+               (nginx_services.resources[0].status.loadBalancer.ingress is defined) and
+               (nginx_services.resources[0].status.loadBalancer.ingress | length > 0)
+            else ''
+          }}
+
+    - name: Retry until the load balancer service has an external IP
+      block:
+        - name: Refresh nginx service until it has an assigned address
+          kubernetes.core.k8s_info:
+            kind: service
+            name: nginx
+            namespace: "{{ testing_namespace }}"
+            kubeconfig: "{{ kubecfg_path }}"
+          register: nginx_lb_wait
+          until: >-
+            (nginx_lb_wait.resources | length > 0) and
+            (nginx_lb_wait.resources[0].status.loadBalancer.ingress is defined) and
+            (nginx_lb_wait.resources[0].status.loadBalancer.ingress | length > 0)
+          retries: 30
+          delay: 5
+
+        - name: Record the assigned load balancer address
+          ansible.builtin.set_fact:
+            nginx_lb_ip: >-
+              {{ nginx_lb_wait.resources[0].status.loadBalancer.ingress[0].ip }}
+
     - name: Assert that the nginx welcome page is available
       ansible.builtin.uri:
-        url: http://{{ ip | ansible.utils.ipwrap }}:{{ port_ }}/
+        url: http://{{ nginx_lb_ip | ansible.utils.ipwrap }}:{{ port_ }}/
         return_content: true
       register: result
       failed_when: "'Welcome to nginx!' not in result.content"
       vars:
-        ip: >-
-          {{ nginx_services.resources[0].status.loadBalancer.ingress[0].ip }}
         port_: >-
           {{ nginx_services.resources[0].spec.ports[0].port }}
 
     - name: Initialize load balancer address range check
       ansible.builtin.set_fact:
         lb_addr_in_range: false
-        lb_ip_value: >-
-          {{ nginx_services.resources[0].status.loadBalancer.ingress[0].ip }}
+        lb_ip_value: "{{ nginx_lb_ip }}"
 
     - name: Check load balancer address against start-end pools
       ansible.builtin.set_fact:
