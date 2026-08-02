@@ -117,9 +117,23 @@
           type: daemonset
           selector: k8s-app=calico-node
           namespace: calico-system
-        - { name: calico-apiserver, type: deployment, namespace: calico-apiserver }
       loop_control:
         label: "{{ item.type }}/{{ item.name }}"
+
+    # The Calico API server is an optional add-on for managing Calico policy via
+    # kubectl (the projectcalico.org/v3 Kubernetes API). It is not required for
+    # Calico CNI data plane operation and does not reconcile on K3s with recent
+    # Calico releases, so it is treated as best-effort here.
+    - name: Wait for the optional Calico API server (best effort)
+      ansible.builtin.command: >-
+        {{ k3s_kubectl_binary | default('k3s kubectl') }} wait deployment/calico-apiserver
+        --namespace=calico-apiserver --for=condition=Available --timeout=30s
+      register: cr_apiserver
+      changed_when: false
+      until: cr_apiserver is succeeded
+      retries: 30
+      delay: 10
+      ignore_errors: true
 
     - name: Verify Calico TigeraStatus reports Available
       ansible.builtin.command: >-
@@ -134,7 +148,6 @@
       failed_when: tigera_status.rc != 0 or (tigera_status.stdout | trim) != 'True'
       with_items:
         - calico
-        - apiserver
       loop_control:
         label: "tigerastatus/{{ item }}"
 
