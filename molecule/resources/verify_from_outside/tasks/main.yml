@@ -7,6 +7,8 @@
       ansible.builtin.import_tasks: kubecfg-fetch.yml
     - name: "TEST CASE: Get nodes"
       ansible.builtin.include_tasks: test/get-nodes.yml
+    - name: "TEST CASE: Verify components"
+      ansible.builtin.include_tasks: test/verify-components.yml
     - name: "TEST CASE: Deploy example"
       ansible.builtin.include_tasks: test/deploy-example.yml
   always:

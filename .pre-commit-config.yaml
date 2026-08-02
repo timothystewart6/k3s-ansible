@@ -62,3 +62,11 @@ repos:
         language: system
         pass_filenames: false
         files: ^roles/k3s_server/tasks/(main|join_master)\.yml$|^\.github/scripts/test-k3s-server-bootstrap\.sh$
+      - id: cilium-bgp-manifest-test
+        name: Cilium BGP manifest test
+        entry: python3 .github/scripts/test-cilium-bgp-manifest.py
+        language: python
+        additional_dependencies:
+          - Jinja2>=3.1
+        pass_filenames: false
+        files: ^roles/k3s_server_post/templates/cilium\.crs\.j2$|^\.github/scripts/test-cilium-bgp-manifest\.py$

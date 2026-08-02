@@ -43,6 +43,28 @@
           {{ nginx_services.resources[0].status.loadBalancer.ingress[0].ip }}
         port_: >-
           {{ nginx_services.resources[0].spec.ports[0].port }}
+
+    - name: Assert that the load balancer address is within the configured pool
+      ansible.builtin.assert:
+        that: lb_addr_in_range
+        success_msg: "LoadBalancer address {{ ip_value }} is in the configured range"
+        fail_msg: >-
+          LoadBalancer address {{ ip_value }} is not in the configured
+          range {{ lb_range }}
+      vars:
+        ip_value: >-
+          {{ nginx_services.resources[0].status.loadBalancer.ingress[0].ip }}
+        lb_range: >-
+          {{ kube_vip_lb_ip_range | default(metal_lb_ip_range, true) }}
+        lb_int: "{{ ip_value | ansible.utils.ipaddr('int') }}"
+        start_int: "{{ lb_range.split('-')[0] | ansible.utils.ipaddr('int') }}"
+        end_int: "{{ lb_range.split('-')[1] | ansible.utils.ipaddr('int') }}"
+        lb_addr_in_range: >-
+          {{
+            (lb_range.split('-') | length == 2) and
+            (lb_int >= start_int) and
+            (lb_int <= end_int)
+          }}
   # Deactivated linter rules:
   #   - jinja[invalid]: As of version 6.6.0, ansible-lint complains that the input to ipwrap
   #                     would be undefined. This will not be the case during playbook execution.
