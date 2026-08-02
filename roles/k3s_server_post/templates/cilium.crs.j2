@@ -1,40 +1,84 @@
-apiVersion: "cilium.io/v2alpha1"
-kind: CiliumBGPPeeringPolicy
+# Cilium BGP Control Plane v2 resources.
+# Replace the deprecated v2alpha1 CiliumBGPPeeringPolicy that was removed
+# in Cilium 1.19.
+{% set _cilium_default_peer = {'peer_address': cilium_bgp_peer_address, 'peer_asn': cilium_bgp_peer_asn} %}
+{% set _cilium_peers = _cilium_bgp_neighbors if _cilium_bgp_neighbors | length > 0 else [_cilium_default_peer] %}
+apiVersion: cilium.io/v2
+kind: CiliumBGPPeerConfig
 metadata:
- name: 01-bgp-peering-policy
-spec: # CiliumBGPPeeringPolicySpec
- virtualRouters: # []CiliumBGPVirtualRouter
- - localASN: {{ cilium_bgp_my_asn }}
-   exportPodCIDR: {{ cilium_exportPodCIDR | default('true') }}
-   neighbors: # []CiliumBGPNeighbor
-{% if _cilium_bgp_neighbors | length > 0 %}
-{% for item in _cilium_bgp_neighbors %}
-    - peerAddress: '{{ item.peer_address + "/32"}}'
-      peerASN: {{ item.peer_asn }}
-      eBGPMultihopTTL: 10
-      connectRetryTimeSeconds: 120
-      holdTimeSeconds: 90
-      keepAliveTimeSeconds: 30
-      gracefulRestart:
-        enabled: true
-        restartTimeSeconds: 120
-{% endfor %}
-{% else %}
-    - peerAddress: '{{ cilium_bgp_peer_address + "/32"}}'
-      peerASN: {{ cilium_bgp_peer_asn }}
-      eBGPMultihopTTL: 10
-      connectRetryTimeSeconds: 120
-      holdTimeSeconds: 90
-      keepAliveTimeSeconds: 30
-      gracefulRestart:
-        enabled: true
-        restartTimeSeconds: 120
-{% endif %}
-   serviceSelector:
-      matchExpressions:
-         - {key: somekey, operator: NotIn, values: ['never-used-value']}
+  name: cilium-peer
+spec:
+  # Matches the timers and multihop used by the previous v2alpha1 policy.
+  ebgpMultihop: 10
+  timers:
+    connectRetryTimeSeconds: 120
+    holdTimeSeconds: 90
+    keepAliveTimeSeconds: 30
+  gracefulRestart:
+    enabled: true
+    restartTimeSeconds: 120
+  families:
+    - afi: ipv4
+      safi: unicast
+      advertisements:
+        matchLabels:
+          advertise: "bgp"
 ---
-apiVersion: "cilium.io/v2alpha1"
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: cilium-bgp
+spec:
+  # Explicitly select every node so the BGP instance runs across the cluster.
+  nodeSelector:
+    matchExpressions:
+      - key: somekey
+        operator: NotIn
+        values: ['never-used-value']
+  bgpInstances:
+    - name: "instance-{{ cilium_bgp_my_asn }}"
+      localASN: {{ cilium_bgp_my_asn }}
+      peers:
+{% for peer in _cilium_peers %}
+        - name: "peer-{{ peer.peer_asn }}-{{ loop.index }}"
+          peerASN: {{ peer.peer_asn }}
+          peerAddress: {{ peer.peer_address }}
+          peerConfigRef:
+            name: cilium-peer
+{% endfor %}
+{% if cilium_exportPodCIDR %}
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: cilium-pod-cidrs
+  labels:
+    advertise: "bgp"
+spec:
+  advertisements:
+    - advertisementType: "PodCIDR"
+{% endif %}
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: cilium-lb-services
+  labels:
+    advertise: "bgp"
+spec:
+  advertisements:
+    - advertisementType: "Service"
+      service:
+        addresses:
+          - LoadBalancerIP
+      # Advertise all Services carrying an ingress address from the pool.
+      selector:
+        matchExpressions:
+          - key: somekey
+            operator: NotIn
+            values: ['never-used-value']
+---
+apiVersion: cilium.io/v2
 kind: CiliumLoadBalancerIPPool
 metadata:
   name: "01-lb-pool"

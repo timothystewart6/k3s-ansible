@@ -43,7 +43,7 @@ argument_specs:
 
       calico_tag:
         description: Calico version tag
-        default: v3.27.2
+        default: v3.32.1
 
       cilium_bgp:
         description:
@@ -99,6 +99,14 @@ argument_specs:
           - native
           - routed
 
+      cilium_tag:
+        description: Cilium version tag
+        default: v1.20.0
+
+      cilium_cli_tag:
+        description: Cilium CLI version tag
+        default: v0.19.7
+
       cluster_cidr:
         description: Inner-cluster IP range
         default: 10.52.0.0/16
@@ -123,7 +131,7 @@ argument_specs:
 
       metal_lb_available_timeout:
         description: Wait for MetalLB resources
-        default: 240s
+        default: 240s6.0
 
       metal_lb_ip_range:
         description: MetalLB ip range for load balancer

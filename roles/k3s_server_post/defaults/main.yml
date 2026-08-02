@@ -9,7 +9,7 @@ calico_ebpf: false
 calico_encapsulation: VXLANCrossSubnet
 calico_natOutgoing: Enabled  # noqa var-naming
 calico_nodeSelector: all()  # noqa var-naming
-calico_tag: v3.27.2
+calico_tag: v3.32.1
 
 cilium_bgp: false
 cilium_exportPodCIDR: true  # noqa var-naming
@@ -20,6 +20,8 @@ cilium_bgp_neighbors_groups: ['k3s_all']
 cilium_bgp_lb_cidr: 192.168.31.0/24
 cilium_hubble: true
 cilium_mode: native
+cilium_tag: v1.20.0
+cilium_cli_tag: v0.19.7
 
 cluster_cidr: 10.52.0.0/16
 enable_bpf_masquerade: true
@@ -28,5 +30,5 @@ group_name_master: master
 
 metal_lb_mode: layer2
 metal_lb_available_timeout: 240s
-metal_lb_controller_tag_version: v0.14.3
+metal_lb_controller_tag_version: v0.16.0
 metal_lb_ip_range: 192.168.30.80-192.168.30.90

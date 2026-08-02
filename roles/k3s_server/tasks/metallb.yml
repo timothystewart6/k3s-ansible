@@ -28,3 +28,22 @@
   loop_control:
     label: "{{ item.change }} => {{ item.to }}"
   when: ansible_hostname == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
+
+- name: Read back MetalLB manifest to verify the speaker image tag
+  ansible.builtin.set_fact:
+    metallb_manifest_has_speaker_tag: >-
+      {{
+        metal_lb_speaker_tag_version in
+        lookup('ansible.builtin.file', '/var/lib/rancher/k3s/server/manifests/metallb-crds.yaml')
+      }}
+  when: ansible_hostname == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
+
+- name: Fail if MetalLB speaker tag was not applied to the manifest
+  ansible.builtin.fail:
+    msg: >-
+      MetalLB speaker image tag {{ metal_lb_speaker_tag_version }}
+      was not found in the downloaded manifest. The upstream image
+      reference may have changed.
+  when:
+    - ansible_hostname == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
+    - not metallb_manifest_has_speaker_tag

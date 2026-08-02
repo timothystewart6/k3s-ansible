@@ -85,17 +85,9 @@
 
 - name: Set metallb webhook service name
   ansible.builtin.set_fact:
-    metallb_webhook_service_name: >-
-      {{
-        (
-          (metal_lb_controller_tag_version | regex_replace('^v', ''))
-          is
-          version('0.14.4', '<', version_type='semver')
-        ) | ternary(
-          'webhook-service',
-          'metallb-webhook-service'
-        )
-      }}
+    # Inspected the v0.16.0 manifest: the newer webhook Service name is used
+    # by every supported MetalLB release, so the old pre-0.14.4 branch is gone.
+    metallb_webhook_service_name: metallb-webhook-service
 
 - name: Test metallb-system webhook-service endpoint
   ansible.builtin.command: >-

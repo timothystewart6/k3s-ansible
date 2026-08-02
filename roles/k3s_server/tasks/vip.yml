@@ -12,9 +12,9 @@
     mode: "0644"
   when: ansible_hostname == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
 
-- name: Download vip rbac manifest to first master
-  ansible.builtin.get_url:
-    url: https://kube-vip.io/manifests/rbac.yaml
+- name: Copy kube-vip RBAC manifest to first master
+  ansible.builtin.template:
+    src: kube-vip-rbac.yaml.j2
     dest: /var/lib/rancher/k3s/server/manifests/vip-rbac.yaml
     owner: root
     group: root
