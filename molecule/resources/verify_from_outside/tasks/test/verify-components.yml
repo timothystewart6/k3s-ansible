@@ -27,38 +27,42 @@
     - name: Verify Flannel is the active CNI
       when: verify_cni == 'flannel'
       block:
-        - name: Get the Flannel DaemonSet
-          kubernetes.core.k8s_info:
-            kind: DaemonSet
-            name: kube-flannel-ds
-            namespace: kube-flannel
-            kubeconfig: "{{ kubecfg_path }}"
-          register: flannel_ds
-
-        - name: Assert the Flannel DaemonSet is scheduled and Ready
+        - name: Assert every node reports Ready
           ansible.builtin.assert:
-            that:
-              - flannel_ds.resources | length == 1
-              - flannel_ds.resources[0].status.desiredNumberScheduled > 0
-              - flannel_ds.resources[0].status.numberReady == flannel_ds.resources[0].status.desiredNumberScheduled
-            success_msg: "Flannel DaemonSet is Ready"
-            fail_msg: "Flannel DaemonSet is not fully Ready"
+            that: item.status.conditions
+              | selectattr('type', 'equalto', 'Ready')
+              | map(attribute='status') | first | default('') == 'True'
+            success_msg: "{{ item.metadata.name }} is Ready"
+            fail_msg: "{{ item.metadata.name }} is not Ready"
+          loop: "{{ verify_nodes.resources }}"
+          loop_control:
+            label: "{{ item.metadata.name }} ready"
 
-    - name: Verify there is no incompatible CNI with Flannel
-      when: verify_cni == 'flannel'
-      block:
         - name: Get any Calico namespaces with Flannel enabled
           kubernetes.core.k8s_info:
             kind: Namespace
             name: calico-system
             kubeconfig: "{{ kubecfg_path }}"
-          register: calico_absent
+          register: flannel_calico_absent
 
         - name: Assert there is no Calico system namespace
           ansible.builtin.assert:
-            that: calico_absent.resources | length == 0
+            that: flannel_calico_absent.resources | length == 0
             success_msg: "No Calico present with Flannel"
             fail_msg: "A Calico namespace exists alongside Flannel"
+
+        - name: Get the Cilium namespace with Flannel enabled
+          kubernetes.core.k8s_info:
+            kind: Namespace
+            name: cilium
+            kubeconfig: "{{ kubecfg_path }}"
+          register: flannel_cilium
+
+        - name: Assert the Cilium namespace is absent
+          ansible.builtin.assert:
+            that: flannel_cilium.resources | length == 0
+            success_msg: "No Cilium present with Flannel"
+            fail_msg: "A Cilium namespace exists alongside Flannel"
 
     - name: Verify Calico is the active CNI
       when: verify_cni == 'calico'
