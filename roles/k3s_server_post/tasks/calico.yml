@@ -104,8 +104,8 @@
       register: cr_result
       changed_when: false
       until: cr_result is succeeded
-      retries: 30
-      delay: 7
+      retries: 60
+      delay: 10
       with_items:
         - { name: calico-typha, type: deployment, namespace: calico-system }
         - { name: calico-kube-controllers, type: deployment, namespace: calico-system }
