@@ -38,6 +38,30 @@
           loop_control:
             label: "{{ item.metadata.name }} ready"
 
+        - name: Assert every node registered a node IP from its interface
+          # Each k3s node is launched with --node-ip derived from flannel_iface.
+          # Confirm every node carries a real InternalIP (not a loopback), which
+          # proves k3s bound to the cluster interface rather than defaulting to 127.0.0.1.
+          ansible.builtin.assert:
+            that: >-
+              (node_internal_ips | length) >= 1 and
+              (node_internal_ips | reject('eq', '127.0.0.1') | list | length) == node_internal_ips | length
+            success_msg: "{{ item.metadata.name }} is bound to {{ node_internal_ips | join(', ') }}"
+            fail_msg: >-
+              {{ item.metadata.name }} has no non-loopback InternalIP
+              (got: {{ node_internal_ips | join(', ') }})
+          vars:
+            node_internal_ips: >-
+              {{
+                (item.status.addresses | default([]))
+                | selectattr('type', 'equalto', 'InternalIP')
+                | map(attribute='address')
+                | list
+              }}
+          loop: "{{ verify_nodes.resources }}"
+          loop_control:
+            label: "{{ item.metadata.name }} InternalIP"
+
         - name: Get any Calico namespaces with Flannel enabled
           kubernetes.core.k8s_info:
             kind: Namespace
