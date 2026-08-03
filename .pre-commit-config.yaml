@@ -84,3 +84,11 @@ repos:
         language: system
         pass_filenames: false
         files: ^roles/k3s_server/tasks/metallb\.yml$|^\.github/scripts/test-metallb-remote-read\.sh$
+      - id: default-interface-test
+        name: default interface test
+        entry: python3 .github/scripts/test-default-interface.py
+        language: python
+        additional_dependencies:
+          - Jinja2>=3.1
+        pass_filenames: false
+        files: ^inventory/sample/group_vars/all\.yml$|^\.github/scripts/test-default-interface\.py$
