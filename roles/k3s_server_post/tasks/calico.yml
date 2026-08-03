@@ -18,6 +18,10 @@
         owner: root
         group: root
         mode: "0755"
+      register: calico_crd_download
+      retries: "{{ download_retries }}"
+      delay: "{{ download_delay }}"
+      until: calico_crd_download is succeeded
 
     - name: "Download to first master: manifest for Tigera Operator and Calico CRDs"
       ansible.builtin.get_url:
@@ -26,6 +30,10 @@
         owner: root
         group: root
         mode: "0755"
+      register: tigera_operator_download
+      retries: "{{ download_retries }}"
+      delay: "{{ download_delay }}"
+      until: tigera_operator_download is succeeded
 
     - name: Apply Calico CRD bundle with server-side apply
       ansible.builtin.command: >-

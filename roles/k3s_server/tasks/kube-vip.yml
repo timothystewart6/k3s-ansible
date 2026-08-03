@@ -15,6 +15,10 @@
     owner: root
     group: root
     mode: "0644"
+  register: kube_vip_manifest_download
+  retries: "{{ download_retries }}"
+  delay: "{{ download_delay }}"
+  until: kube_vip_manifest_download is succeeded
   when: ansible_hostname == hostvars[groups[group_name_master | default('master')][0]]['ansible_hostname']
 
 - name: Copy kubevip configMap manifest to first master

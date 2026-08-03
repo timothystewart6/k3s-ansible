@@ -66,6 +66,10 @@
             - .tar.gz.sha256sum
           vars:
             cilium_base_url: https://github.com/cilium/cilium-cli/releases/download/{{ cilium_cli_tag }}
+          register: cilium_cli_download
+          retries: "{{ download_retries }}"
+          delay: "{{ download_delay }}"
+          until: cilium_cli_download is succeeded
 
         - name: Verify the downloaded tarball
           ansible.builtin.shell: |
@@ -182,6 +186,13 @@
         KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
       register: cilium_install_result
       changed_when: cilium_install_result.rc == 0
+      # cilium install/upgrade fetches the Helm chart from helm.cilium.io, which is
+      # fronted by GitHub Pages and can transiently fail DNS resolution through the
+      # host resolver (intermittent "lookup helm.cilium.io ... i/o timeout"). Retry
+      # so a transient name/network failure does not abort the whole converge play.
+      until: cilium_install_result.rc == 0
+      retries: "{{ download_retries }}"
+      delay: "{{ download_delay }}"
       when: cilium_installed.rc != 0 or cilium_needs_update
 
     - name: Wait for Cilium resources
