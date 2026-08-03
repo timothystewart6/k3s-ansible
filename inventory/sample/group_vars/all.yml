@@ -8,16 +8,18 @@ systemd_dir: /etc/systemd/system
 system_timezone: Your/Timezone
 
 # interface which will be used for flannel
-flannel_iface: eth0
+# Defaults to each host's default IPv4 interface (e.g. eth0, enp1s0, ens3)
+# so KVM/cloud hosts without eth0 work out of the box. Override per-host if needed.
+flannel_iface: "{{ ansible_facts.default_ipv4.interface }}"
 
 # uncomment calico_iface to use tigera operator/calico cni instead of flannel https://docs.tigera.io/calico/latest/about
-# calico_iface: "eth0"
+# calico_iface: "{{ ansible_facts.default_ipv4.interface }}"
 calico_ebpf: false # use eBPF dataplane instead of iptables
 calico_tag: v3.32.1 # calico version tag
 
 # uncomment cilium_iface to use cilium cni instead of flannel or calico
 # ensure v4.19.57, v5.1.16, v5.2.0 or more recent kernel
-# cilium_iface: "eth0"
+# cilium_iface: "{{ ansible_facts.default_ipv4.interface }}"
 cilium_mode: native # native when nodes are on the same subnet or use BGP, otherwise set tunnel
 cilium_tag: v1.20.0 # cilium version tag
 cilium_cli_tag: v0.19.7 # cilium cli version tag
