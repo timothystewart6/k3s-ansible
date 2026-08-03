@@ -219,11 +219,25 @@
             namespace: metallb-system
             kubeconfig: "{{ kubecfg_path }}"
           register: metallb_info
+          until: metallb_info.resources | length > 0
+          retries: 15
+          delay: 10
           loop:
             - { kind: Deployment, name: controller }
             - { kind: DaemonSet, name: speaker }
           loop_control:
             label: "{{ item.kind }}/{{ item.name }}"
+
+        - name: Fail with a clear message if MetalLB resources are missing
+          ansible.builtin.fail:
+            msg: >-
+              Did not find {{ item.kind | lower }} {{ item.name }} in
+              metallb-system. Expected MetalLB to be deployed in this
+              scenario (verify_lb: {{ verify_lb }}).
+          when: item.resources | length == 0
+          loop: "{{ metallb_info.results }}"
+          loop_control:
+            label: "{{ item.item.kind }}/{{ item.item.name }}"
 
         - name: Assert MetalLB controller and speaker use the expected image tags
           ansible.builtin.assert:
