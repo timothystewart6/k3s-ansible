@@ -122,7 +122,10 @@
   always:
     - name: Save logs of k3s-init.service
       ansible.builtin.include_tasks: fetch_k3s_init_logs.yml
-      when: log_destination
+      # ANSIBLE_K3S_LOG_DIR is a path string when set; evaluate it as a boolean
+      # so the conditional is a real boolean (ansible-core 2.19 rejects string
+      # conditionals derived from env vars).
+      when: log_destination | default('') != ''
       vars:
         log_destination: >-
           {{ lookup('ansible.builtin.env', 'ANSIBLE_K3S_LOG_DIR', default=False) }}
