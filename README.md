@@ -108,6 +108,24 @@ ansible-playbook reset.yml -i inventory/my-cluster/hosts.ini
 
 > Reboot the nodes after reset because the virtual IP may remain configured.
 
+### ⏻️ Reboot Cluster Nodes
+
+Reboot all cluster nodes at once or stage the reboot across the cluster.
+
+```bash
+ansible-playbook reboot.yml -i inventory/my-cluster/hosts.ini
+```
+
+To reboot the nodes in batches, set `concurrent_reboots` to the number of nodes
+to reboot at a time (or a percentage). Optionally set `wait_seconds_after_reboot`
+to pause after each batch so pods in the freshly rebooted batch can settle
+before the next batch reboots.
+
+```bash
+ansible-playbook reboot.yml -i inventory/my-cluster/hosts.ini \
+  --extra-vars 'concurrent_reboots=2 wait_seconds_after_reboot=30'
+```
+
 ## 🔁 Upgrading an existing cluster
 
 These version variables select the components used for a **fresh** installation.
@@ -236,6 +254,8 @@ See the commands [here](https://technotim.com/posts/k3s-etcd-ansible/#testing-yo
 | `k3s_server_post` | `metal_lb_bgp_peer_asn` | string | `~` | Not required | BGP peer ASN configurations |
 | `k3s_server_post` | `metal_lb_bgp_peer_address` | string | `~` | Not required | BGP peer address |
 | `lxc` | `custom_reboot_command` | string | `~` | Not required | Command to run on reboot |
+| `reboot` (playbook) | `concurrent_reboots` | int/string | `100%` | Not required | Number (or percentage) of nodes to reboot at a time for a staggered reboot |
+| `reboot` (playbook) | `wait_seconds_after_reboot` | int | `0` | Not required | Pause in seconds between staggered reboot batches |
 | `prereq` | `system_timezone` | string | `null` | Not required | Timezone to be set on all nodes |
 | `proxmox_lxc`, `reset_proxmox_lxc` | `proxmox_lxc_ct_ids` | list | ❌ | Required | Proxmox container ID list |
 | `raspberrypi` | `state` | string | `present` | Not required | Indicates whether the k3s prerequisites for Raspberry Pi should be set up (possible values are `present` and `absent`) |
