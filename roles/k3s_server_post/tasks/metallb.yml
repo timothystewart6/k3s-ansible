@@ -118,6 +118,10 @@
   changed_when: false
   run_once: true
   when: metal_lb_mode == "layer2"
+  register: metallb_l2_test_result
+  until: metallb_l2_test_result.rc == 0
+  retries: "{{ download_retries }}"
+  delay: "{{ download_delay }}"
   with_items:
     - IPAddressPool
     - L2Advertisement
@@ -128,6 +132,10 @@
   changed_when: false
   run_once: true
   when: metal_lb_mode == "bgp"
+  register: metallb_bgp_test_result
+  until: metallb_bgp_test_result.rc == 0
+  retries: "{{ download_retries }}"
+  delay: "{{ download_delay }}"
   with_items:
     - IPAddressPool
     - BGPPeer
