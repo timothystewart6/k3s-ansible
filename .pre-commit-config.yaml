@@ -84,6 +84,15 @@ repos:
         language: system
         pass_filenames: false
         files: ^roles/k3s_server/tasks/metallb\.yml$|^\.github/scripts/test-metallb-remote-read\.sh$
+      - id: metallb-deploy-condition-test
+        name: MetalLB deploy condition test
+        entry: python3 .github/scripts/test-metallb-deploy-condition.py
+        language: python
+        additional_dependencies:
+          - Jinja2>=3.1
+          - PyYAML
+        pass_filenames: false
+        files: ^roles/k3s_server/tasks/main\.yml$|^roles/k3s_server_post/tasks/main\.yml$|^\.github/scripts/test-metallb-deploy-condition\.py$ # noqa yaml[line-length]
       - id: default-interface-test
         name: default interface test
         entry: python3 .github/scripts/test-default-interface.py

@@ -54,6 +54,12 @@
     {% if item.condition | default(False) -%}{{ item.condition }}{%- endif %}
     --timeout='{{ metal_lb_available_timeout }}'
   changed_when: false
+  # The kube API can briefly return ServiceUnavailable while MetalLB converges,
+  # which would otherwise abort the whole converge play on a transient error.
+  register: metallb_wait_result
+  until: metallb_wait_result.rc == 0
+  retries: "{{ download_retries }}"
+  delay: "{{ download_delay }}"
   run_once: true
   with_items:
     - description: controller

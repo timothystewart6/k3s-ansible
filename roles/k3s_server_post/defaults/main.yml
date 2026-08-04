@@ -23,6 +23,13 @@ cilium_mode: native
 cilium_tag: v1.20.0
 cilium_cli_tag: v0.19.7
 
+# Shared retry/delay for remote manifest, asset downloads, and waiting on
+# Kubernetes resources. The CI runner's resolver intermittently times out on
+# GitHub-hosted domains and the kube API can transiently return
+# ServiceUnavailable, so retry transient DNS/network/API failures.
+download_retries: 5
+download_delay: 10
+
 cluster_cidr: 10.52.0.0/16
 enable_bpf_masquerade: true
 kube_proxy_replacement: true

@@ -32,10 +32,13 @@ concurrency:
 
 jobs:
   pre:
+    if: github.actor != 'dependabot[bot]'
     uses: ./.github/workflows/cache.yml
     needs: [lint]
   lint:
+    if: github.actor != 'dependabot[bot]'
     uses: ./.github/workflows/lint.yml
   test:
+    if: github.actor != 'dependabot[bot]'
     uses: ./.github/workflows/test.yml
     needs: [pre, lint]

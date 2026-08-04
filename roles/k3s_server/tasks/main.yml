@@ -27,7 +27,11 @@
 - name: Deploy metallb manifest
   ansible.builtin.include_tasks: metallb.yml
   tags: metallb
-  when: kube_vip_lb_ip_range is not defined and (cilium_bgp is not defined or cilium_iface is not defined)
+  # Deploy MetalLB unless kube-vip owns the load balancer IP range, or Cilium
+  # BGP is enabled (Cilium then provides its own load balancing). The cilium_bgp
+  # default keeps this safe when Cilium variables are not in scope at all (#644)
+  # while still deploying MetalLB when a non-BGP Cilium CNI is in use.
+  when: kube_vip_lb_ip_range is not defined and not (cilium_bgp | default(false) | bool)
 
 - name: Deploy kube-vip manifest
   ansible.builtin.include_tasks: kube-vip.yml
