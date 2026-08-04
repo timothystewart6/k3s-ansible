@@ -103,7 +103,7 @@
           ansible.builtin.assert:
             that:
               - calico_node_ds.resources | length == 1
-              - calico_node_image is regex_search(':' ~ calico_tag)
+              - calico_node_image | regex_search(':' ~ calico_tag) is not none
             success_msg: "Calico node image uses tag {{ calico_tag }}"
             fail_msg: >-
               Calico node image {{ calico_node_image }},
@@ -169,8 +169,8 @@
         - name: Assert Cilium agent and operator use the expected image tag
           ansible.builtin.assert:
             that:
-              - cilium_agent_image is regex_search(':' ~ cilium_tag)
-              - cilium_operator_image is regex_search(':' ~ cilium_tag)
+              - cilium_agent_image | regex_search(':' ~ cilium_tag) is not none
+              - cilium_operator_image | regex_search(':' ~ cilium_tag) is not none
             success_msg: "Cilium agent and operator use {{ cilium_tag }}"
             fail_msg: >-
               Cilium agent {{ cilium_agent_image }},
@@ -265,12 +265,12 @@
 
         - name: Assert MetalLB controller and speaker use the expected image tags
           ansible.builtin.assert:
-            # regex_search returns a string; use the boolean `is regex_search` test
-            # so the assertion is a real boolean (ansible-core 2.19 rejects string
-            # conditionals and `| bool` deprecates string coercion).
+            # regex_search returns a string or none; check for a match with `is not
+            # none` so the assertion is a real boolean (ansible-core 2.19 rejects
+            # string conditionals and `| bool` deprecates string coercion).
             that:
-              - controller_image is regex_search(metal_lb_controller_tag_version)
-              - speaker_image is regex_search(metal_lb_speaker_tag_version)
+              - controller_image | regex_search(metal_lb_controller_tag_version) is not none
+              - speaker_image | regex_search(metal_lb_speaker_tag_version) is not none
             success_msg: >-
               MetalLB controller {{ metal_lb_controller_tag_version }},
               speaker {{ metal_lb_speaker_tag_version }}
@@ -314,8 +314,8 @@
         - name: Assert the kube-vip and cloud provider image tags
           ansible.builtin.assert:
             that:
-              - kubevip_image is regex_search(':' ~ kube_vip_tag_version)
-              - cloud_provider_image is regex_search(verify_kube_vip_cloud_provider_tag)
+              - kubevip_image | regex_search(':' ~ kube_vip_tag_version) is not none
+              - cloud_provider_image | regex_search(verify_kube_vip_cloud_provider_tag) is not none
             success_msg: >-
               kube-vip {{ kube_vip_tag_version }},
               cloud provider {{ verify_kube_vip_cloud_provider_tag }}
