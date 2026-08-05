@@ -70,6 +70,15 @@ repos:
           - Jinja2>=3.1
         pass_filenames: false
         files: ^roles/k3s_server_post/templates/cilium\.crs\.j2$|^\.github/scripts/test-cilium-bgp-manifest\.py$
+      - id: cilium-envoy-toggle-test
+        name: Cilium Envoy toggle test
+        entry: python3 .github/scripts/test-cilium-envoy-toggle.py
+        language: python
+        additional_dependencies:
+          - Jinja2>=3.1
+          - PyYAML
+        pass_filenames: false
+        files: ^roles/k3s_server_post/tasks/cilium\.yml$|^\.github/scripts/test-cilium-envoy-toggle\.py$
       - id: kube-vip-manifest-test
         name: kube-vip manifest test
         entry: python3 .github/scripts/test-kube-vip-manifest.py

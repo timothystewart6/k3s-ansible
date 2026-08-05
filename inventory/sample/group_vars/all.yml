@@ -24,6 +24,10 @@ cilium_mode: native # native when nodes are on the same subnet or use BGP, other
 cilium_tag: v1.20.0 # cilium version tag
 cilium_cli_tag: v0.19.7 # cilium cli version tag
 cilium_hubble: true # enable hubble observability relay and ui
+cilium_envoy: true # enable the Envoy proxy for Cilium L7 policies
+
+# disable cilium_envoy to skip the Envoy proxy entirely (e.g. no L7 policies)
+# cilium_envoy: false
 
 # if using calico or cilium, you may specify the cluster pod cidr pool
 cluster_cidr: 10.52.0.0/16

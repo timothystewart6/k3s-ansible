@@ -18,6 +18,7 @@ cilium_bgp_peer_asn: 64512
 cilium_bgp_neighbors: []
 cilium_bgp_neighbors_groups: ['k3s_all']
 cilium_bgp_lb_cidr: 192.168.31.0/24
+cilium_envoy: true
 cilium_hubble: true
 cilium_mode: native
 cilium_tag: v1.20.0
