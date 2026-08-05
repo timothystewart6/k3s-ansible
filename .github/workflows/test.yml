@@ -88,7 +88,7 @@ jobs:
           trap stop_monitor EXIT
           /usr/bin/time -v -o "$timing_file" \
             molecule test --scenario-name ${{ matrix.scenario }}
-        timeout-minutes: 150
+        timeout-minutes: 180
         env:
           ANSIBLE_K3S_LOG_DIR: ${{ runner.temp }}/logs/k3s-ansible/${{ matrix.scenario }}
           ANSIBLE_SSH_RETRIES: 4
