@@ -120,6 +120,12 @@ metal_lb_controller_tag_version: v0.16.0
 # metallb ip range for load balancer
 metal_lb_ip_range: 192.168.30.80-192.168.30.90
 
+# (optional) limit MetalLB layer2 announcements to specific network interfaces.
+# Leave empty (default) to announce on all interfaces.
+# metal_lb_interfaces:
+#   - eth1
+#   - eth2
+
 # Only enable if your nodes are proxmox LXC nodes, make sure to configure your proxmox nodes
 # in your hosts.ini file.
 # Please read https://gist.github.com/triangletodd/02f595cd4c0dc9aac5f7763ca2264185 before using this.

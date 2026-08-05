@@ -141,6 +141,14 @@ argument_specs:
         description: MetalLB ip range for load balancer
         default: 192.168.30.80-192.168.30.90
 
+      metal_lb_interfaces:
+        description: >-
+          List of network interfaces on which MetalLB should announce the
+          load balancer IPs in layer2 mode. When empty (default), MetalLB
+          announces on all interfaces.
+        type: list
+        default: []
+
       metal_lb_controller_tag_version:
         description: Image tag for MetalLB
         default: v0.16.0

@@ -93,6 +93,14 @@ repos:
         language: system
         pass_filenames: false
         files: ^roles/k3s_server/tasks/metallb\.yml$|^\.github/scripts/test-metallb-remote-read\.sh$
+      - id: metallb-interfaces-test
+        name: MetalLB interfaces test
+        entry: python3 .github/scripts/test-metallb-interfaces.py
+        language: python
+        additional_dependencies:
+          - Jinja2>=3.1
+        pass_filenames: false
+        files: ^roles/k3s_server_post/templates/metallb\.crs\.j2$|^\.github/scripts/test-metallb-interfaces\.py$
       - id: metallb-deploy-condition-test
         name: MetalLB deploy condition test
         entry: python3 .github/scripts/test-metallb-deploy-condition.py
