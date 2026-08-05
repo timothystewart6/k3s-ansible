@@ -37,7 +37,7 @@ spec:
           value: {{ kube_vip_iface }}
 {% endif %}
         - name: vip_subnet
-          value: "{{ apiserver_endpoint | ansible.utils.ipsubnet | ansible.utils.ipaddr('prefix') }}"
+          value: "{{ (kube_vip_endpoint | default(apiserver_endpoint)) | ansible.utils.ipsubnet | ansible.utils.ipaddr('prefix') }}"
         - name: cp_enable
           value: "true"
         - name: cp_namespace
@@ -55,7 +55,7 @@ spec:
         - name: vip_retryperiod
           value: "2"
         - name: address
-          value: {{ apiserver_endpoint }}
+          value: {{ kube_vip_endpoint | default(apiserver_endpoint) }}
 {% if kube_vip_bgp | default(false) | bool %}
 {% if kube_vip_bgp_routerid is defined %}
         - name: bgp_routerid

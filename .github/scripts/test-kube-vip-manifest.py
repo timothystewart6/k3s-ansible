@@ -123,6 +123,35 @@ def main():
     if "name: bgp_peers" in output:
         fail("bgp_peers present even though the peer list is empty")
 
+    # kube_vip_endpoint unset (undefined default): the address and subnet use
+    # the apiserver endpoint, so the template always emits an address here.
+    output = render(
+        env,
+        {
+            "_kube_vip_bgp_peers": [],
+            "kube_vip_arp": True,
+            "kube_vip_bgp": False,
+        },
+    )
+    if "value: 192.168.30.222" not in output:
+        fail("default kube-vip address does not use apiserver_endpoint")
+
+    # kube_vip_endpoint set: overrides the internal listening address AND the
+    # subnet derivation while the advertised apiserver_endpoint stays separate.
+    output = render(
+        env,
+        {
+            "_kube_vip_bgp_peers": [],
+            "kube_vip_endpoint": "10.66.1.5",
+            "kube_vip_arp": True,
+            "kube_vip_bgp": False,
+        },
+    )
+    if "value: 10.66.1.5" not in output:
+        fail("kube_vip_endpoint did not override the address")
+    if "value: 192.168.30.222" in output:
+        fail("apiserver_endpoint leaked into address when kube_vip_endpoint set")
+
     print("kube-vip manifest regression test passed")
 
 

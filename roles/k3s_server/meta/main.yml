@@ -78,6 +78,15 @@ argument_specs:
           - automatically at runtime.
         default: ~
 
+      kube_vip_endpoint:
+        description:
+          - Overrides the address kube-vip binds/listens on internally, which
+          - can differ from the announced apiserver_endpoint for complex
+          - routing and site-to-site tunnels.
+          - Defaults to apiserver_endpoint and is used to derive the kube-vip
+          - subnet.
+        default: ~
+
       kube_vip_tag_version:
         description: Image tag for kube-vip
         default: v1.2.2

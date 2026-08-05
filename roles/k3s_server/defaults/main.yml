@@ -7,6 +7,7 @@ group_name_master: master
 
 kube_vip_arp: true
 kube_vip_iface:
+kube_vip_endpoint:
 kube_vip_cloud_provider_tag_version: v0.0.12
 kube_vip_tag_version: v1.2.2
 

@@ -48,6 +48,11 @@ cilium_bgp_lb_cidr: 192.168.31.0/24 # cidr for cilium loadbalancer ipam
 # enable kube-vip ARP broadcasts
 kube_vip_arp: true
 
+# (optional) overrides the address kube-vip binds/listens on internally, which
+# can differ from the announced apiserver_endpoint for complex routing/tunnels.
+# Defaults to apiserver_endpoint. Also used to derive the kube-vip subnet.
+# kube_vip_endpoint: 10.66.1.5
+
 # enable kube-vip BGP peering
 kube_vip_bgp: false
 
