@@ -261,6 +261,7 @@ See the commands [here](https://technotim.com/posts/k3s-etcd-ansible/#testing-yo
 | `reboot` (playbook) | `concurrent_reboots` | int/string | `100%` | Not required | Number (or percentage) of nodes to reboot at a time for a staggered reboot |
 | `reboot` (playbook) | `wait_seconds_after_reboot` | int | `0` | Not required | Pause in seconds between staggered reboot batches |
 | `prereq` | `system_timezone` | string | `null` | Not required | Timezone to be set on all nodes |
+| `prereq` | `disable_swap` | bool | `true` | Not required | Disable swap on all cluster nodes (swapoff + comment out /etc/fstab swap entries), all-or-nothing |
 | `proxmox_lxc`, `reset_proxmox_lxc` | `proxmox_lxc_ct_ids` | list | ❌ | Required | Proxmox container ID list |
 | `raspberrypi` | `state` | string | `present` | Not required | Indicates whether the k3s prerequisites for Raspberry Pi should be set up (possible values are `present` and `absent`) |
 

@@ -68,6 +68,12 @@ repos:
         language: system
         pass_filenames: false
         files: ^site\.yml$|^\.github/scripts/test-unique-hostname-precheck\.sh$
+      - id: disable-swap-test
+        name: Disable swap test
+        entry: .github/scripts/test-disable-swap.sh
+        language: system
+        pass_filenames: false
+        files: ^roles/prereq/(tasks/main|defaults/main)\.yml$|^\.github/scripts/test-disable-swap\.sh$
       - id: cilium-bgp-manifest-test
         name: Cilium BGP manifest test
         entry: python3 .github/scripts/test-cilium-bgp-manifest.py

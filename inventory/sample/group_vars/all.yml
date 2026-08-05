@@ -7,6 +7,10 @@ systemd_dir: /etc/systemd/system
 # Set your timezone
 system_timezone: Your/Timezone
 
+# k3s recommends swap be disabled on every cluster node. Applied uniformly to all
+# nodes (all-or-nothing) in the prereq role. Set to false to leave swap enabled.
+disable_swap: true
+
 # interface which will be used for flannel
 # Defaults to each host's default IPv4 interface (e.g. eth0, enp1s0, ens3)
 # so KVM/cloud hosts without eth0 work out of the box. Override per-host if needed.
