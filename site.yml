@@ -8,6 +8,23 @@
         msg: >
           "Ansible is out of date. See here for more info: https://docs.technotim.com/posts/ansible-automation/"
 
+    - name: Verify all cluster nodes have unique hostnames
+      ansible.builtin.assert:
+        that: (cluster_hostnames | unique | length) == (cluster_hostnames | length)
+        msg: >-
+          k3s nodes must have unique hostnames. Found a duplicate in:
+          {{ cluster_hostnames | unique }}. Each node registers in the cluster
+          keyed by its hostname, so matching hostnames prevent nodes from joining.
+      vars:
+        cluster_hostnames: >-
+          {{
+            groups['k3s_cluster']
+            | map('extract', hostvars, 'ansible_hostname')
+            | list
+          }}
+      run_once: true
+      when: "'k3s_cluster' in groups"
+
 - name: Prepare Proxmox cluster
   hosts: proxmox
   gather_facts: true

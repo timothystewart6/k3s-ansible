@@ -50,6 +50,10 @@ Supported processor architectures are:
 - Server and agent nodes should support passwordless SSH access. Otherwise, pass `--ask-pass --ask-become-pass` to
   each playbook command.
 
+- Every node in the cluster must have a **unique hostname**. k3s registers each node keyed by its hostname, so
+  two nodes with the same hostname cannot join the cluster. `site.yml` asserts this up front and fails fast if
+  any duplicate is found.
+
 ## 🚀 Getting Started
 
 ### 🍴 Preparation

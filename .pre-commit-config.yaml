@@ -62,6 +62,12 @@ repos:
         language: system
         pass_filenames: false
         files: ^roles/k3s_server/tasks/(main|join_master)\.yml$|^\.github/scripts/test-k3s-server-bootstrap\.sh$
+      - id: unique-hostname-precheck-test
+        name: Unique hostname precheck test
+        entry: .github/scripts/test-unique-hostname-precheck.sh
+        language: system
+        pass_filenames: false
+        files: ^site\.yml$|^\.github/scripts/test-unique-hostname-precheck\.sh$
       - id: cilium-bgp-manifest-test
         name: Cilium BGP manifest test
         entry: python3 .github/scripts/test-cilium-bgp-manifest.py
