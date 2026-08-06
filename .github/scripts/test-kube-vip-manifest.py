@@ -123,18 +123,21 @@ def main():
     if "name: bgp_peers" in output:
         fail("bgp_peers present even though the peer list is empty")
 
-    # kube_vip_endpoint unset (undefined default): the address and subnet use
-    # the apiserver endpoint, so the template always emits an address here.
+    # kube_vip_endpoint defaults to null (defined in role defaults): the
+    # address and subnet must fall back to the apiserver endpoint. default()
+    # without a truthy flag does NOT fall back on null, only on undefined, so
+    # this case pins the null runtime condition to prevent that regression.
     output = render(
         env,
         {
             "_kube_vip_bgp_peers": [],
+            "kube_vip_endpoint": None,
             "kube_vip_arp": True,
             "kube_vip_bgp": False,
         },
     )
     if "value: 192.168.30.222" not in output:
-        fail("default kube-vip address does not use apiserver_endpoint")
+        fail("null kube_vip_endpoint does not fall back to apiserver_endpoint")
 
     # kube_vip_endpoint set: overrides the internal listening address AND the
     # subnet derivation while the advertised apiserver_endpoint stays separate.
