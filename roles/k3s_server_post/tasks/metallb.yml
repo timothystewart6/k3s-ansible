@@ -40,7 +40,7 @@
 
 - name: Test metallb-system namespace
   ansible.builtin.command: >-
-    {{ k3s_kubectl_binary | default('k3s kubectl') }} -n metallb-system
+    {{ k3s_kubectl_binary | default('k3s kubectl') }} get namespace metallb-system
   changed_when: false
   with_items: "{{ groups[group_name_master | default('master')] }}"
   run_once: true

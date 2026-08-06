@@ -113,6 +113,14 @@ repos:
           - Jinja2>=3.1
         pass_filenames: false
         files: ^roles/k3s_server_post/templates/metallb\.crs\.j2$|^\.github/scripts/test-metallb-interfaces\.py$
+      - id: metallb-namespace-test
+        name: MetalLB namespace test
+        entry: python3 .github/scripts/test-metallb-namespace.py
+        language: python
+        additional_dependencies:
+          - PyYAML
+        pass_filenames: false
+        files: ^roles/k3s_server_post/tasks/metallb\.yml$|^\.github/scripts/test-metallb-namespace\.py$
       - id: metallb-deploy-condition-test
         name: MetalLB deploy condition test
         entry: python3 .github/scripts/test-metallb-deploy-condition.py
