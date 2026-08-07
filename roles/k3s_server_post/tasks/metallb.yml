@@ -105,6 +105,12 @@
   ansible.builtin.command: >-
     {{ k3s_kubectl_binary | default('k3s kubectl') }} -n metallb-system get endpoints {{ metallb_webhook_service_name }}
   changed_when: false
+  # The kube API can briefly return ServiceUnavailable while MetalLB converges,
+  # which would otherwise abort the whole converge play on a transient error.
+  register: metallb_webhook_result
+  until: metallb_webhook_result.rc == 0
+  retries: "{{ download_retries }}"
+  delay: "{{ download_delay }}"
   with_items: "{{ groups[group_name_master | default('master')] }}"
   run_once: true
 
