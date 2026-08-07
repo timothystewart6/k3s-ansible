@@ -65,6 +65,25 @@ def main():
             "(got: {0!r})".format(command_text)
         )
 
+    # The sibling k3s_server_post metallb tasks retry kubectl because the kube
+    # API can briefly be unavailable while MetalLB converges. Without the same
+    # retry here, a transient API error aborts the whole converge play. Assert
+    # the retry wiring is present so it does not regress.
+    if not task.get("register"):
+        fail(
+            "task does not register a result; without retry wiring a transient "
+            "kube API error aborts the converge play"
+        )
+    if not isinstance(task.get("until"), str) or "rc == 0" not in task["until"]:
+        fail(
+            "task does not retry on rc == 0; the kube API can transiently fail "
+            "while MetalLB converges and abort the play"
+        )
+    if task.get("retries") is None:
+        fail("task is missing retries")
+    if task.get("delay") is None:
+        fail("task is missing delay")
+
     print("MetalLB namespace check regression test passed")
 
 
