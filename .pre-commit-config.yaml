@@ -147,3 +147,11 @@ repos:
           - Jinja2>=3.1
         pass_filenames: false
         files: ^inventory/sample/group_vars/all\.yml$|^\.github/scripts/test-default-interface\.py$
+      - id: verify-nginx-assert-test
+        name: verify nginx assert test
+        entry: python3 .github/scripts/test-verify-nginx-assert.py
+        language: python
+        additional_dependencies:
+          - PyYAML
+        pass_filenames: false
+        files: ^molecule/resources/verify_from_outside/tasks/test/deploy-example\.yml$|^\.github/scripts/test-verify-nginx-assert\.py$ # noqa yaml[line-length]

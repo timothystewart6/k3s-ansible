@@ -69,7 +69,16 @@
         url: http://{{ nginx_lb_ip | ansible.utils.ipwrap }}:{{ port_ }}/
         return_content: true
       register: result
-      failed_when: "'Welcome to nginx!' not in result.content"
+      # The MetalLB speaker announces the VIP on the host-only network, and the
+      # runner may briefly not see it in its ARP table yet. Retry so a transient
+      # announcement miss does not fail an otherwise healthy cluster, matching
+      # the load-balancer address wait above and the k3s_server_post metallb waits.
+      until:
+        - result.status is defined
+        - result.status == 200
+        - "'Welcome to nginx!' in result.content"
+      retries: 30
+      delay: 5
       vars:
         port_: >-
           {{ nginx_services.resources[0].spec.ports[0].port }}
