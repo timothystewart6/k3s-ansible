@@ -95,9 +95,24 @@ argument_specs:
         description: Tag for kube-vip-cloud-provider manifest when enabled
         default: v0.0.12
 
+      kube_vip_enabled:
+        description:
+          - Enable installing kube-vip.
+          - Covers both the control-plane VIP and the service load balancer.
+          - Set false to skip kube-vip entirely, for example on a single node or when an external load balancer is used.
+        default: true
+        type: bool
+
       kube_vip_lb_ip_range:
         description: IP range for kube-vip load balancer
         default: ~
+
+      metal_lb_enabled:
+        description:
+          - Enable installing MetalLB for service load balancing.
+          - Set false to skip MetalLB, for example when an external load balancer is used.
+        default: true
+        type: bool
 
       metal_lb_controller_tag_version:
         description: Image tag for MetalLB

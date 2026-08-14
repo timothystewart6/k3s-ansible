@@ -24,19 +24,21 @@
 
 - name: Deploy vip manifest
   ansible.builtin.include_tasks: vip.yml
+  when: kube_vip_enabled
 - name: Deploy metallb manifest
   ansible.builtin.include_tasks: metallb.yml
   tags: metallb
-  # Deploy MetalLB unless kube-vip owns the load balancer IP range, or Cilium
-  # BGP is enabled (Cilium then provides its own load balancing). The cilium_bgp
-  # default keeps this safe when Cilium variables are not in scope at all (#644)
-  # while still deploying MetalLB when a non-BGP Cilium CNI is in use.
-  when: kube_vip_lb_ip_range is not defined and not (cilium_bgp | default(false) | bool)
+  # Deploy MetalLB unless explicitly disabled, kube-vip owns the load balancer
+  # IP range, or Cilium BGP is enabled (Cilium then provides its own load
+  # balancing). The cilium_bgp default keeps this safe when Cilium variables are
+  # not in scope at all (#644) while still deploying MetalLB when a non-BGP
+  # Cilium CNI is in use.
+  when: metal_lb_enabled and kube_vip_lb_ip_range is not defined and not (cilium_bgp | default(false) | bool)
 
 - name: Deploy kube-vip manifest
   ansible.builtin.include_tasks: kube-vip.yml
   tags: kubevip
-  when: kube_vip_lb_ip_range is defined
+  when: kube_vip_enabled and kube_vip_lb_ip_range is defined
 
 - name: Initialize and verify the K3s control plane
   any_errors_fatal: true

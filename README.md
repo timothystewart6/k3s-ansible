@@ -222,7 +222,9 @@ See the commands [here](https://technotim.com/posts/k3s-etcd-ansible/#testing-yo
 | `k3s_server` | `kube_vip_endpoint` | string | `~` | Not required | Overrides the internal address kube-vip binds/listens on, which can differ from the announced apiserver_endpoint for complex routing/tunnels. Defaults to apiserver_endpoint. |
 | `k3s_server` | `kube_vip_tag_version` | string | `v1.2.2` | Not required | Image tag for kube-vip |
 | `k3s_server` | `kube_vip_cloud_provider_tag_version` | string | `v0.0.12` | Not required | Tag for kube-vip-cloud-provider manifest when enable |
+| `k3s_server` | `kube_vip_enabled` | bool | `true` | Not required | Enable kube-vip install, covering both the control-plane VIP and the service load balancer. Set false to skip kube-vip entirely (single node or external LB). |
 | `k3s_server`, `k3_server_post` | `kube_vip_lb_ip_range` | string | `~` | Not required | IP range for kube-vip load balancer |
+| `k3s_server`, `k3s_server_post` | `metal_lb_enabled` | bool | `true` | Not required | Enable MetalLB install for service load balancing. Set false to skip MetalLB (external LB). |
 | `k3s_server`, `k3s_server_post` | `metal_lb_controller_tag_version` | string | `v0.16.0` | Not required | Image tag for MetalLB |
 | `k3s_server` | `metal_lb_speaker_tag_version` | string | `v0.16.0` | Not required | Image tag for MetalLB |
 | `k3s_server` | `metal_lb_type` | string | `native` | Not required | Use FRR mode or native. Valid values are `frr` and `native` |

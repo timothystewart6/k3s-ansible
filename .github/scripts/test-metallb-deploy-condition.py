@@ -10,7 +10,8 @@ scenario.
 
 This test loads the real `when` expressions from both task files and evaluates
 them against representative variable sets, asserting MetalLB is deployed in
-every topology except when kube-vip owns the VIP range or Cilium BGP is enabled.
+every topology except when MetalLB is explicitly disabled, kube-vip owns the
+VIP range, or Cilium BGP is enabled.
 """
 
 from __future__ import print_function
@@ -23,6 +24,7 @@ import yaml
 from jinja2 import Environment
 
 METALLB_WHEN = (
+    "metal_lb_enabled and "
     "kube_vip_lb_ip_range is not defined and "
     "not (cilium_bgp | default(false) | bool)"
 )
@@ -88,6 +90,7 @@ def scenarios():
     yield (
         # Default Flannel inventory (all.yml sets cilium_bgp: false).
         {
+            "metal_lb_enabled": True,
             "cilium_bgp": False,
             "cilium_iface": None,
         },
@@ -98,6 +101,7 @@ def scenarios():
         # Calico CNI with no Cilium variable in scope (issue #644): cilium_bgp
         # is genuinely undefined, so `default(false)` must keep MetalLB on.
         {
+            "metal_lb_enabled": True,
             "calico_iface": "eth1",
         },
         True,
@@ -106,6 +110,7 @@ def scenarios():
     yield (
         # Cilium CNI with BGP disabled: MetalLB must still be deployed.
         {
+            "metal_lb_enabled": True,
             "cilium_bgp": False,
             "cilium_iface": "eth1",
         },
@@ -115,6 +120,7 @@ def scenarios():
     yield (
         # Cilium CNI with BGP enabled: Cilium provides the LB, skip MetalLB.
         {
+            "metal_lb_enabled": True,
             "cilium_bgp": True,
             "cilium_iface": "eth1",
         },
@@ -124,11 +130,20 @@ def scenarios():
     yield (
         # kube-vip is the load balancer provider: skip MetalLB.
         {
+            "metal_lb_enabled": True,
             "kube_vip_lb_ip_range": "192.168.30.80-192.168.30.90",
             "cilium_bgp": False,
         },
         False,
         "kube-vip owns the VIP range",
+    )
+    yield (
+        # MetalLB explicitly disabled (external LB / single node): skip.
+        {
+            "metal_lb_enabled": False,
+        },
+        False,
+        "metal_lb_enabled: false (external LB)",
     )
 
 

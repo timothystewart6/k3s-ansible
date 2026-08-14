@@ -20,6 +20,9 @@ kube_vip_bgp_peeras: "64512"
 kube_vip_bgp_peers: []
 kube_vip_bgp_peers_groups: ['k3s_master']
 
+kube_vip_enabled: true
+
+metal_lb_enabled: true
 metal_lb_controller_tag_version: v0.16.0
 metal_lb_speaker_tag_version: v0.16.0
 metal_lb_type: native
