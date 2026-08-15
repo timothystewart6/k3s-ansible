@@ -89,7 +89,7 @@ argument_specs:
 
       kube_vip_tag_version:
         description: Image tag for kube-vip
-        default: v1.2.2
+        default: v1.2.3
 
       kube_vip_cloud_provider_tag_version:
         description: Tag for kube-vip-cloud-provider manifest when enabled

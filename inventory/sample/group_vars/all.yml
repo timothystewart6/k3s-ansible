@@ -1,5 +1,5 @@
 ---
-k3s_version: v1.36.2+k3s1
+k3s_version: v1.36.3+k3s1
 # this is the user that has ssh access to these machines
 ansible_user: ansibleuser
 systemd_dir: /etc/systemd/system
@@ -102,7 +102,7 @@ extra_agent_args: >-
   {{ extra_args }}
 
 # image tag for kube-vip
-kube_vip_tag_version: v1.2.2
+kube_vip_tag_version: v1.2.3
 
 # enable kube-vip (covers both the control-plane VIP and service load balancing)
 # set false for a single node or when an external load balancer is used

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render the kube-vip DaemonSet template and assert env key correctness.
 
-kube-vip v1.2.2 reads `bgp_peers` and `vip_subnet`; it ignores the older
+kube-vip v1.2.3 reads `bgp_peers` and `vip_subnet`; it ignores the older
 `bgppeers` and `vip_cidr` names. This test proves the rendered manifest uses
 the keys the target image actually parses.
 """
@@ -74,7 +74,7 @@ def render(env, extra_vars):
             {"peer_address": "192.168.30.1", "peer_asn": "64512"},
             {"peer_address": "192.168.30.2", "peer_asn": "64513"},
         ],
-        "kube_vip_tag_version": "v1.2.2",
+        "kube_vip_tag_version": "v1.2.3",
     }
     base_vars.update(extra_vars)
     template = env.get_template("vip.yaml.j2")
@@ -105,8 +105,8 @@ def main():
         fail("rendered manifest still uses the ignored vip_cidr key")
     if "192.168.30.1:64512,192.168.30.2:64513" not in output:
         fail("bgp_peers value is not comma-separated address:ASN entries")
-    if "ghcr.io/kube-vip/kube-vip:v1.2.2" not in output:
-        fail("kube-vip image tag is not v1.2.2")
+    if "ghcr.io/kube-vip/kube-vip:v1.2.3" not in output:
+        fail("kube-vip image tag is not v1.2.3")
 
     # BGP enabled with no merged peers: single-peer fallback vars, no bgp_peers.
     output = render(
