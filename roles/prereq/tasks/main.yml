@@ -68,13 +68,21 @@
 
 - name: Install kernel-modules-extra if br_netfilter missing
   ansible.builtin.yum:
-    name: kernel-modules-extra
+    name: "kernel-modules-extra-{{ ansible_kernel }}"
     state: present
     update_cache: true
   register: kernel_modules_installed
   when:
     - ansible_os_family == "RedHat"
     - br_netfilter_exists.stdout | int == 0
+
+- name: Reboot node if kernel modules package was installed
+  ansible.builtin.reboot:
+    msg: "Rebooting to apply new kernel modules package"
+    reboot_timeout: 300
+  when:
+    - ansible_os_family == "RedHat"
+    - kernel_modules_installed is changed
 
 - name: Add br_netfilter to /etc/modules-load.d/
   ansible.builtin.copy:
