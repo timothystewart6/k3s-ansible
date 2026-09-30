@@ -1,20 +1,27 @@
 ---
+# The probes below must run in check mode as well. The command module does not
+# execute under --check, it returns rc 0 with "Command would have run if not in
+# check mode", which would otherwise mark every host as a Raspberry Pi and make
+# check runs apply the distro specific tasks. The rc values mean: 0 matched, 1 no
+# match, 2 the file is absent (no /proc/device-tree on non ARM systems).
 - name: Test for raspberry pi /proc/cpuinfo
   ansible.builtin.command: grep -E "Raspberry Pi|BCM2708|BCM2709|BCM2835|BCM2836" /proc/cpuinfo
   register: grep_cpuinfo_raspberrypi
   failed_when: false
   changed_when: false
+  check_mode: false
 
 - name: Test for raspberry pi /proc/device-tree/model
   ansible.builtin.command: grep -E "Raspberry Pi" /proc/device-tree/model
   register: grep_device_tree_model_raspberrypi
   failed_when: false
   changed_when: false
+  check_mode: false
 
 - name: Set raspberry_pi fact to true
   ansible.builtin.set_fact:
     raspberry_pi: true
-  when: grep_cpuinfo_raspberrypi.rc == 0 or grep_device_tree_model_raspberrypi.rc == 0
+  when: (grep_cpuinfo_raspberrypi.rc | default(1)) == 0 or (grep_device_tree_model_raspberrypi.rc | default(1)) == 0
 
 - name: Set detected_distribution to Raspbian (ARM64 on Raspbian, Debian Buster/Bullseye/Bookworm)
   ansible.builtin.set_fact:

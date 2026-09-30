@@ -76,6 +76,12 @@ repos:
         language: system
         pass_filenames: false
         files: ^roles/prereq/(tasks/main|defaults/main)\.yml$|^\.github/scripts/test-disable-swap\.sh$
+      - id: raspberrypi-detection-test
+        name: Raspberry Pi detection test
+        entry: .github/scripts/test-raspberrypi-detection.sh
+        language: system
+        pass_filenames: false
+        files: ^roles/raspberrypi/(tasks/main|defaults/main)\.yml$|^\.github/scripts/test-raspberrypi-detection\.sh$
       - id: cilium-bgp-manifest-test
         name: Cilium BGP manifest test
         entry: python3 .github/scripts/test-cilium-bgp-manifest.py
