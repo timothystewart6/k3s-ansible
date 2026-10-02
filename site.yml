@@ -85,5 +85,5 @@
         dest: ./kubeconfig
         flat: true
       when: >-
-        ansible_facts.hostname == hostvars[groups[group_name_master | default('master')][0]]
-        ['ansible_facts']['hostname']
+        ansible_facts.hostname ==
+        hostvars[groups[group_name_master | default('master')][0]]['ansible_facts']['hostname']
