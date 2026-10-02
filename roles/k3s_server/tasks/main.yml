@@ -124,13 +124,18 @@
   always:
     - name: Save logs of k3s-init.service
       ansible.builtin.include_tasks: fetch_k3s_init_logs.yml
-      # ANSIBLE_K3S_LOG_DIR is a path string when set; evaluate it as a boolean
-      # so the conditional is a real boolean (ansible-core 2.19 rejects string
-      # conditionals derived from env vars).
+      # The env lookup default must be an empty string, not the boolean
+      # False. The `!= ''` comparison below always evaluates to a bool, so
+      # ansible-core 2.19 never sees a non-boolean conditional and no boolean
+      # default is needed. With a boolean default, an unset ANSIBLE_K3S_LOG_DIR
+      # leaves log_destination as the bool False, and `False != ''` is True
+      # because False == 0. The guard would then always pass, running the
+      # diagnostics on every provisioning run and creating a directory
+      # literally named 'False' in the operator's working directory.
       when: log_destination | default('') != ''
       vars:
         log_destination: >-
-          {{ lookup('ansible.builtin.env', 'ANSIBLE_K3S_LOG_DIR', default=False) }}
+          {{ lookup('ansible.builtin.env', 'ANSIBLE_K3S_LOG_DIR', default='') }}
     - name: Kill the temporary service used for initialization
       ansible.builtin.systemd:
         name: k3s-init
