@@ -64,6 +64,12 @@ repos:
         language: system
         pass_filenames: false
         files: ^roles/k3s_server/tasks/(main|join_master)\.yml$|^\.github/scripts/test-k3s-server-bootstrap\.sh$
+      - id: k3s-init-log-destination-test
+        name: K3s init log destination test
+        entry: .github/scripts/test-k3s-init-log-destination.py
+        language: system
+        pass_filenames: false
+        files: ^roles/k3s_server/tasks/main\.yml$|^\.github/scripts/test-k3s-init-log-destination\.py$
       - id: unique-hostname-precheck-test
         name: Unique hostname precheck test
         entry: .github/scripts/test-unique-hostname-precheck.sh
