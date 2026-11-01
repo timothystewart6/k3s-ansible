@@ -34,6 +34,11 @@
   tags: kubevip
   when: kube_vip_lb_ip_range is defined
 
+- name: Deploy kube-apiserver audit logging
+  ansible.builtin.include_tasks: audit.yml
+  tags: audit
+  when: k3s_audit_log_enabled | bool
+
 - name: Init cluster inside the transient k3s-init service
   ansible.builtin.command:
     cmd: systemd-run -p RestartSec=2 -p Restart=on-failure --unit=k3s-init k3s server {{ server_init_args }}

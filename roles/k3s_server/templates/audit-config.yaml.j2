@@ -1,0 +1,10 @@
+---
+# The "+" suffix appends to any kube-apiserver-arg set in config.yaml.
+kube-apiserver-arg+:
+  - audit-policy-file={{ k3s_audit_policy_file }}
+  - audit-log-path={{ k3s_audit_log_dir }}/audit.log
+  - audit-log-format=json
+  - audit-log-maxage={{ k3s_audit_log_maxage }}
+  - audit-log-maxbackup={{ k3s_audit_log_maxbackup }}
+  - audit-log-maxsize={{ k3s_audit_log_maxsize }}
+  - audit-log-compress=true

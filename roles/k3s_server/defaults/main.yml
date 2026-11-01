@@ -1,6 +1,13 @@
 ---
 extra_server_args: ""
 
+k3s_audit_log_enabled: false
+k3s_audit_log_dir: /var/log/kubernetes/audit
+k3s_audit_policy_file: /etc/rancher/k3s/audit-policy.yaml
+k3s_audit_log_maxage: 7
+k3s_audit_log_maxbackup: 5
+k3s_audit_log_maxsize: 50
+
 k3s_kubectl_binary: k3s kubectl
 
 group_name_master: master

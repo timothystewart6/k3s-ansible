@@ -1,0 +1,34 @@
+---
+- name: Create audit log directory
+  ansible.builtin.file:
+    path: "{{ k3s_audit_log_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Create k3s config drop-in directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s/config.yaml.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy kube-apiserver audit policy
+  ansible.builtin.copy:
+    src: audit-policy.yaml
+    dest: "{{ k3s_audit_policy_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  register: k3s_audit_policy
+
+- name: Deploy k3s audit configuration
+  ansible.builtin.template:
+    src: audit-config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml.d/audit.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  register: k3s_audit_config

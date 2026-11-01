@@ -26,6 +26,34 @@ argument_specs:
         description: Name of the master group
         default: master
 
+      k3s_audit_log_enabled:
+        description: Write a kube-apiserver audit log on every server node
+        type: bool
+        default: false
+
+      k3s_audit_log_dir:
+        description: Directory for the audit log (audit.log plus its rotations)
+        default: /var/log/kubernetes/audit
+
+      k3s_audit_policy_file:
+        description: Path of the audit policy file on the server nodes
+        default: /etc/rancher/k3s/audit-policy.yaml
+
+      k3s_audit_log_maxage:
+        description: Days to keep rotated audit logs
+        type: int
+        default: 7
+
+      k3s_audit_log_maxbackup:
+        description: Number of rotated audit logs to keep
+        type: int
+        default: 5
+
+      k3s_audit_log_maxsize:
+        description: Size in megabytes at which the audit log rotates
+        type: int
+        default: 50
+
       k3s_create_kubectl_symlink:
         description: Create the kubectl -> k3s symlink
         default: false

@@ -1,0 +1,76 @@
+---
+# Records who changed what through the API server. Reads, heartbeats and
+# status-only updates are dropped so the log stays small on SD/USB storage.
+# Nothing is logged above Metadata, so request bodies (and Secret values)
+# never reach the log.
+apiVersion: audit.k8s.io/v1
+kind: Policy
+omitStages:
+  - RequestReceived
+rules:
+  - level: None
+    verbs: ["get", "list", "watch"]
+
+  - level: None
+    nonResourceURLs: ["/*"]
+
+  - level: None
+    userGroups: ["system:nodes"]
+
+  - level: None
+    resources:
+      - group: ""
+        resources: ["events", "endpoints"]
+      - group: "events.k8s.io"
+        resources: ["events"]
+      - group: "coordination.k8s.io"
+        resources: ["leases"]
+      - group: "discovery.k8s.io"
+        resources: ["endpointslices"]
+      - group: "authentication.k8s.io"
+        resources: ["tokenreviews"]
+      - group: "authorization.k8s.io"
+        resources:
+          - subjectaccessreviews
+          - selfsubjectaccessreviews
+          - selfsubjectrulesreviews
+          - localsubjectaccessreviews
+
+  - level: None
+    resources:
+      - group: ""
+        resources: ["*/status"]
+      - group: "apiextensions.k8s.io"
+        resources: ["*/status"]
+      - group: "apps"
+        resources: ["*/status"]
+      - group: "batch"
+        resources: ["*/status"]
+      - group: "autoscaling.k8s.io"
+        resources: ["*/status"]
+      - group: "cert-manager.io"
+        resources: ["*/status"]
+      - group: "external-secrets.io"
+        resources: ["*/status"]
+      - group: "flowcontrol.apiserver.k8s.io"
+        resources: ["*/status"]
+      - group: "fluxcd.controlplane.io"
+        resources: ["*/status"]
+      - group: "helm.cattle.io"
+        resources: ["*/status"]
+      - group: "helm.toolkit.fluxcd.io"
+        resources: ["*/status"]
+      - group: "image.toolkit.fluxcd.io"
+        resources: ["*/status"]
+      - group: "kustomize.toolkit.fluxcd.io"
+        resources: ["*/status"]
+      - group: "monitoring.coreos.com"
+        resources: ["*/status"]
+      - group: "notification.toolkit.fluxcd.io"
+        resources: ["*/status"]
+      - group: "postgresql.cnpg.io"
+        resources: ["*/status"]
+      - group: "source.toolkit.fluxcd.io"
+        resources: ["*/status"]
+
+  - level: Metadata

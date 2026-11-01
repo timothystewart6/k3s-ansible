@@ -91,6 +91,19 @@ ansible-playbook reset.yml -i inventory/my-cluster/hosts.ini
 
 >You should also reboot these nodes due to the VIP not being destroyed
 
+### 📜 Audit logging
+
+With `k3s_audit_log_enabled: true`, every server writes a kube-apiserver audit
+log to `/var/log/kubernetes/audit/audit.log` using the policy in
+`roles/k3s_server/files/audit-policy.yaml`: who created, changed or deleted
+what, at Metadata level, without reads or request bodies. New clusters get it
+from `site.yml`. For a running cluster, apply it without re-running cluster
+init; servers restart one at a time:
+
+```bash
+ansible-playbook audit-log.yml -i inventory/my-cluster/hosts.ini
+```
+
 ## ⚙️ Kube Config
 
 To copy your `kube config` locally so that you can access your **Kubernetes** cluster run:
@@ -135,6 +148,12 @@ See the commands [here](https://technotim.live/posts/k3s-etcd-ansible/#testing-y
 | `k3s_server`, `k3s_server_post` | `cilium_bgp` | bool | `~` | Not required | Enable cilium BGP control plane for LB services and pod cidrs. Disables the use of MetalLB. |
 | `k3s_server`, `k3s_server_post` | `cilium_iface` | string | ❌ | Not required | The network interface used for when Cilium is enabled |
 | `k3s_server` | `extra_server_args` | string | `""` | Not required | Extra arguments for server nodes |
+| `k3s_server` | `k3s_audit_log_enabled` | bool | `false` | Not required | Write a kube-apiserver audit log on every server node |
+| `k3s_server` | `k3s_audit_log_dir` | string | `/var/log/kubernetes/audit` | Not required | Directory for the audit log and its rotations |
+| `k3s_server` | `k3s_audit_policy_file` | string | `/etc/rancher/k3s/audit-policy.yaml` | Not required | Path of the audit policy file |
+| `k3s_server` | `k3s_audit_log_maxage` | int | `7` | Not required | Days to keep rotated audit logs |
+| `k3s_server` | `k3s_audit_log_maxbackup` | int | `5` | Not required | Number of rotated audit logs to keep |
+| `k3s_server` | `k3s_audit_log_maxsize` | int | `50` | Not required | Size in megabytes at which the audit log rotates |
 | `k3s_server` | `k3s_create_kubectl_symlink` | bool | `false` | Not required | Create the kubectl -> k3s symlink |
 | `k3s_server` | `k3s_create_crictl_symlink` | bool | `true` | Not required | Create the crictl -> k3s symlink |
 | `k3s_server` | `kube_vip_arp` | bool | `true` | Not required | Enables kube-vip ARP broadcasts |

@@ -1,0 +1,45 @@
+---
+# Turns on kube-apiserver audit logging for an existing cluster without
+# running the k3s_server role, which stops k3s and re-runs cluster init.
+# Server nodes restart one at a time so etcd keeps quorum.
+- name: Enable kube-apiserver audit logging on server nodes
+  hosts: master
+  serial: 1
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Require audit logging to be enabled in the inventory
+      ansible.builtin.assert:
+        that: k3s_audit_log_enabled | default(false) | bool
+        fail_msg: Set k3s_audit_log_enabled to true in the inventory group_vars first.
+        quiet: true
+
+    - name: Deploy audit policy and k3s configuration
+      ansible.builtin.include_role:
+        name: k3s_server
+        tasks_from: audit
+
+    - name: Restart k3s to load the audit configuration
+      ansible.builtin.systemd:
+        name: k3s
+        state: restarted
+      when: k3s_audit_policy is changed or k3s_audit_config is changed
+
+    - name: Wait for the local API server and etcd to be ready
+      ansible.builtin.command: k3s kubectl get --raw=/readyz
+      register: k3s_readyz
+      until: k3s_readyz.rc == 0 and k3s_readyz.stdout == "ok"
+      retries: 40
+      delay: 6
+      changed_when: false
+      check_mode: false
+
+    - name: Wait for the node to be Ready
+      ansible.builtin.command: k3s kubectl wait --for=condition=Ready node/{{ ansible_hostname }} --timeout=180s
+      changed_when: false
+      check_mode: false
+
+    - name: Wait for the audit log to appear
+      ansible.builtin.wait_for:
+        path: "{{ k3s_audit_log_dir | default('/var/log/kubernetes/audit') }}/audit.log"
+        timeout: 120

@@ -83,6 +83,10 @@ extra_server_args: >-
 extra_agent_args: >-
   {{ extra_args }}
 
+# write a kube-apiserver audit log on every master to /var/log/kubernetes/audit
+# (run audit-log.yml to turn it on for an existing cluster)
+k3s_audit_log_enabled: false
+
 # image tag for kube-vip
 kube_vip_tag_version: v1.0.0
 
